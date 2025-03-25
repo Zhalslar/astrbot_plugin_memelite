@@ -16,5 +16,11 @@
           "type": "bool",
           "hint": "压缩长或宽超过512px的静态生成图，防止大图展示，可防刷屏",
           "default": true
+      },
+   "is_check_resources": {
+          "description": "启动时检查资源",
+          "type": "bool",
+          "hint": "每次启动本插件时，检查一遍meme所需资源，缺失资源会自动下载，确保资源下载完整时可关掉这个选项，关掉可优化启动性能",
+          "default": true
       }
 }

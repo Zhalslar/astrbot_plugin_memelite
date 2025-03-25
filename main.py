@@ -42,18 +42,16 @@ class MemePlugin(Star):
         self.temp_path = os.path.join(TEMP_DIR, f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg")
         if not os.path.exists(TEMP_DIR):
             os.makedirs(TEMP_DIR)
+        self.is_check_resources: bool = config.get('is_check_resources', True)
+        if self.is_check_resources:
+            logger.info("正在检查memes资源文件...")
+            asyncio.create_task(check_resources())
 
-    @filter.command("meme初始化", desc="初始化meme，下载必要资源")
-    async def meme_init(self, event: AstrMessageEvent):
-        logger.info("正在检查memes资源文件...")
-        event.plain_result("正在检查memes资源文件，请留意控制台信息")
-        asyncio.create_task(check_resources())
 
     @filter.command("表情列表", desc="查看有哪些关键词可以触发meme")
     async def meme_keyword_show(self, event: AstrMessageEvent):
         meme_keywords_str = "、".join(self.meme_keywords_list)
         url = await self.text_to_image(meme_keywords_str, return_url=True)
-        print(self.meme_keywords_list)
         yield event.image_result(url)
 
     @filter.command("表情详情", desc="查看指定meme需要的参数")
