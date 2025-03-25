@@ -59,11 +59,6 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 | /表情详情 xxx  | 具体查看某个meme的参数         |
 |   {关键词}     |   触发meme合成            |
 
-```plaintext
-
-
-
-```
 
 , 关键词包括：
 ```plaintext
