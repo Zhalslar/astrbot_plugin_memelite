@@ -12,7 +12,10 @@ _✨ [astrbot](https://github.com/nonebot/nonebot2) 表情包制作插件 ✨_
 
 > [!NOTE]  本插件负责处理聊天机器人与表情包生成器的对接。  
 > 具体表情包制作相关资源文件和代码在 [表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator) 中   
-> 本插件使用本地部署的meme-generator。同时尽量保持插件的轻量化，表情包生成快，性能要求低
+> 本插件使用本地部署的meme-generator。同时尽量保持插件的轻量化，表情包生成快，性能要求低  
+> 
+
+
 
 
 ## 📦 安装
@@ -77,6 +80,12 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 '致电', '你应该致电']
 
 ```
+## 🐔 使用说明
+- 本插件支持从原始消息中提取参数，请用空格隔开参数，如 “喜报 nmsl”
+- 本插件支持从引用消息中提取参数，如“[引用的消息] 喜报”
+- 提供的参数不够时，插件自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数来补充。
+
+
 ## 📌 注意事项
 1. 本插件之前是本人在nonebot上随手写的，现在适配了一下astrbot，插件刚发布，难免有些意料之外的bug，欢迎提issue
 
