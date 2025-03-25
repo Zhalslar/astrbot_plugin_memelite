@@ -22,6 +22,7 @@ _✨ [astrbot](https://github.com/nonebot/nonebot2) 表情包制作插件 ✨_
 
 - 第一步，安装 meme-generator  
 - 在astrbot控制台或进到astrbot的虚拟环境里，运行下面的命令，耐心等待安装完成，
+- 如果是docker部署的astrbot，还需挂载meme-generator到astrbot的虚拟环境里，具体怎么做我还没测
 ```
 pip install meme-generator
 ```
@@ -51,7 +52,12 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 
 ## ⌨️ 基础命令
-关键词触发, 关键词包括：
+```plaintext
+/表情列表
+/表情详情 xxx
+```
+
+关键词触发meme合成, 关键词包括：
 ```plaintext
 ['5000兆', '戒导', '逆转裁判气泡', '二次元入口', '上瘾', '毒瘾发作', '添乱', '给社会添乱', '一样', '支付宝支付', '一直', '我永远喜欢', '防诱拐',
  '阿尼亚喜欢', '鼓掌', '阿罗娜扔', '升天', '问问', '亚托莉枕头', '继续干活', '打工人', '悲报', 'ba说', '拍头', '揍', '啃', '真寻挨骂', '高血压',
