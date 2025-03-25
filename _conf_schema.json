@@ -1,0 +1,20 @@
+{
+    "prefix": {
+        "description": "触发meme的前缀",
+        "type": "string",
+        "hint": "消息含有此前缀才能触发meme，默认为空（即不使用前缀），注意此配置不受bot全局前缀的影响",
+        "default": ""
+    },
+     "fuzzy_match": {
+        "description": "是否模糊匹配触发",
+        "type": "bool",
+        "hint": "消息中含有关键词即可触发meme，谨慎打开，容易误触",
+        "default": false
+    },
+     "is_compress_image": {
+          "description": "是否压缩图片",
+          "type": "bool",
+          "hint": "压缩长或宽超过512px的静态生成图，防止大图展示，可防刷屏",
+          "default": true
+      }
+}
