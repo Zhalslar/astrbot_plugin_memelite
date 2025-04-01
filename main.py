@@ -22,8 +22,8 @@ from PIL import Image, ImageSequence
 import astrbot.core.message.components as comp
 from astrbot.core.star.filter.event_message_type import EventMessageType
 
-PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMP_DIR = os.path.join(PLUGIN_DIR, "temp")
+
+TEMP_DIR = "./data/plugins/astrbot_plugin_memelite_data/temp"
 if not os.path.exists(TEMP_DIR):
     os.makedirs(TEMP_DIR)
 
@@ -31,18 +31,18 @@ memes: list[Meme] = get_memes()
 meme_keywords_list = [keyword.lower() for meme in memes for keyword in meme.keywords] # 有序列表
 meme_keywords_set = set(meme_keywords_list) # 无序集合
 
-@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）", "1.0.0", "https://github.com/Zhalslar/astrbot_plugin_memelite")
+@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）", "1.0.4")
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
+        self.memes: list[Meme] = memes
+        self.meme_keywords_list: list = meme_keywords_list
+
         self.prefix: str = config.get('prefix', '')
         self.fuzzy_match: int = config.get('fuzzy_match', True)
         self.is_compress_image: bool = config.get('is_compress_image', True)
-        self.memes: list[Meme] = memes
-        self.meme_keywords_list: list = meme_keywords_list
-        self.temp_path = os.path.join(TEMP_DIR, f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg")
-        if not os.path.exists(TEMP_DIR):
-            os.makedirs(TEMP_DIR)
+        self.save_temp_image: bool = config.get('save_temp_image', False)
+
         self.is_check_resources: bool = config.get('is_check_resources', True)
         if self.is_check_resources:
             logger.info("正在检查memes资源文件...")
@@ -75,13 +75,15 @@ class MemePlugin(Star):
         )
 
         preview = meme.generate_preview()
-        self.save_image(preview)
+        image_name = f"{keyword}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_preview"
+        temp_path = self.save_image(preview, image_name)
 
         chain = [
             comp.Plain(meme_info),
-            comp.Image.fromFileSystem(self.temp_path),
+            comp.Image.fromFileSystem(temp_path),
         ]
         yield event.chain_result(chain)
+
 
     @filter.event_message_type(EventMessageType.ALL)
     async def meme_handle(self, event: AstrMessageEvent) -> None:
@@ -198,12 +200,15 @@ class MemePlugin(Star):
             return
 
         if self.is_compress_image:
-            self.compress_image(img)
+            image_name = f"{keyword}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_compressed"
+            temp_path = self.compress_image(img, image_name)
         else:
-            self.save_image(img)
+            image_name = f"{keyword}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            temp_path = self.save_image(img, image_name)
 
-        yield event.image_result(self.temp_path)
-        os.remove(self.temp_path)
+        yield event.image_result(temp_path)
+        if not self.save_temp_image:
+            os.remove(temp_path)
 
 
 
@@ -217,15 +222,17 @@ class MemePlugin(Star):
                 return meme
         return None
 
-    def save_image(self, image_bytesio):
+
+    @staticmethod
+    def save_image(image_bytesio, image_name:str):
         """保存图片（支持gif）"""
         img = Image.open(image_bytesio)
         original_format = img.format if img.format else 'PNG'
-        self.temp_path = os.path.join(TEMP_DIR, f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg")
+        temp_path = os.path.join(TEMP_DIR, f"{image_name}.{original_format.lower()}")
         if original_format.upper() == 'GIF':
             frames = [frame.copy() for frame in ImageSequence.Iterator(img)]
             frames[0].save(
-                self.temp_path,
+                temp_path,
                 format='GIF',
                 save_all=True,
                 append_images=frames[1:],
@@ -233,16 +240,17 @@ class MemePlugin(Star):
                 duration=img.info.get('duration', 100)
             )
         else:
-            img.save(self.temp_path, format=original_format)
+            img.save(temp_path, format=original_format)
+        return temp_path
 
 
-    def compress_image(self, image_bytesio, max_size: int = 512) -> None:
+    def compress_image(self, image_bytesio, image_name:str, max_size: int = 512) -> str:
         """压缩图片到max_size大小，gif不处理"""
         try:
             img = Image.open(image_bytesio)
             if img.format == "GIF":
-                self.save_image(image_bytesio)
-                return
+                temp_path = self.save_image(image_bytesio,image_name)
+                return temp_path
 
             if img.width > max_size or img.height > max_size:
                 img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
@@ -251,7 +259,8 @@ class MemePlugin(Star):
             output_buffer = io.BytesIO()
             img.save(output_buffer, format=img.format)
             output_buffer.seek(0)
-            self.save_image(output_buffer)
+            temp_path = self.save_image(output_buffer, image_name)
+            return temp_path
 
         except Exception as e:
             raise ValueError(f"图片压缩失败: {e}")

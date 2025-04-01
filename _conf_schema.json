@@ -17,6 +17,12 @@
           "hint": "压缩长或宽超过512px的静态生成图，防止大图展示，可防刷屏",
           "default": true
       },
+    "save_temp_image": {
+        "description": "是否保存生成的图片",
+        "type": "bool",
+        "hint": "保存路径：data/plugins/astrbot_plugin_memelite_data",
+      "default": false
+    },
    "is_check_resources": {
           "description": "启动时检查资源",
           "type": "bool",
