@@ -163,15 +163,16 @@ class MemePlugin(Star):
                 if text != keyword:
                     texts.append(text)
 
-        # 遍历原始消息段落
-        for seg in messages:
-            await _process_segment(seg)
 
         # 如果有引用消息，也遍历之
         reply_seg = next((seg for seg in messages if isinstance(seg, comp.Reply)), None)
         if reply_seg:
             for seg in reply_seg.chain:
                 await _process_segment(seg)
+
+        # 遍历原始消息段落
+        for seg in messages:
+            await _process_segment(seg)
 
         # 确保图片数量在min_images到max_images之间
         if len(images) < min_images:
