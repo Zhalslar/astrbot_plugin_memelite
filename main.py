@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import aiohttp
 from meme_generator import Meme, get_memes
 from meme_generator.download import check_resources
 from meme_generator.exception import MemeGeneratorException
@@ -148,8 +149,8 @@ class MemePlugin(Star):
         async def _process_segment(_seg):
             """Process a single message segment."""
             if isinstance(_seg, comp.Image):
-                img_path = seg.path
-                msg_image = self.read_image(img_path)
+                img_url = seg.url
+                msg_image = await self.download_image(img_url)
                 images.append(msg_image)
             elif isinstance(_seg, comp.At):
                 if str(seg.qq) != self_id:
@@ -257,12 +258,27 @@ class MemePlugin(Star):
 
 
     @staticmethod
-    def read_image(file_path: str) -> bytes:
-        """将指定路径下的图片读取到内存里"""
-        with Image.open(file_path) as img:
-            img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format=img.format)
-            return img_byte_arr.getvalue()
+    async def download_image(url: str) -> bytes:
+        url = url.replace("https://", "http://")
+        try:
+            async with aiohttp.ClientSession() as client:
+                response = await client.get(url)
+                img_bytes = await response.read()
+                return img_bytes
+        except Exception as e:
+            logger.error(f"图片下载失败: {e}")
+
+    @staticmethod
+    async def get_events_on_history(month: str) -> str:
+        try:
+            async with aiohttp.ClientSession() as client:
+                url = f"https://baike.baidu.com/cms/home/eventsOnHistory/{month}.json"
+                response = await client.get(url)
+                response.encoding = "utf-8"
+                return await response.text()
+        except Exception as e:
+            logger.error(f"任务处理失败: {e}")
+            return ""
 
     @staticmethod
     async def get_avatar(user_id: str) -> bytes:
