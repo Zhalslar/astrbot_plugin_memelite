@@ -92,6 +92,8 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 - 本插件支持从原始消息中提取参数，请用空格隔开参数，如 “喜报 nmsl”
 - 本插件支持从引用消息中提取参数，如“[引用的消息] 喜报”
 - 提供的参数不够时，插件自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数来补充。
+示例
+![7802b10923f98245baadc84f56a3416](https://github.com/user-attachments/assets/6ba7adf4-ff6f-4817-8645-cc159f409d2c)
 
 
 ## 📌 注意事项
