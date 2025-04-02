@@ -31,7 +31,7 @@ memes: list[Meme] = get_memes()
 meme_keywords_list = [keyword.lower() for meme in memes for keyword in meme.keywords] # 有序列表
 meme_keywords_set = set(meme_keywords_list) # 无序集合
 
-@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）", "1.0.4")
+@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）", "1.0.6")
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -96,21 +96,20 @@ class MemePlugin(Star):
          - 支持引用消息传参 。
          - 自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数。
          """
-        keyword = None
         message_str = event.get_message_str()
+        if not message_str:  # 过滤非文本消息
+            return
         message_list = message_str.split()
 
         if self.prefix: # 前缀模式
-            if not message_list:
-                return
             if self.prefix not in message_list[0]:
                 return
-
+            message_list[0] = message_list[0].replace(self.prefix, '', 1)  # 去除前缀
 
         if self.fuzzy_match:
             keyword = next((k for k in meme_keywords_set if k in message_str), None) # 模糊匹配模式
         else:
-            keyword = next((k for k in meme_keywords_set if k in message_list[0]), None) # 精准匹配模式
+            keyword = next((k for k in meme_keywords_set if k in message_list), None) # 精准匹配模式
         if not keyword:
             return
 
