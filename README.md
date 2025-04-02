@@ -28,8 +28,7 @@ _✨ [astrbot](https://github.com/nonebot/nonebot2) 表情包制作插件 ✨_
 ```
 pip install meme-generator
 ```
-- 如果是docker部署的astrbot，还需挂载meme-generator到astrbot的虚拟环境里，具体怎么做我还没测
-如果安装失败，请前往meme仓库看具体安装教程：[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)
+- 如果是docker部署的astrbot，还需挂载meme-generator到astrbot的虚拟环境里，具体怎么做我还没测，可请前往meme仓库看具体安装教程：[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)
 
 - 第二步，安装本插件
 - 可以直接在astrbot的插件市场搜索astrbot_plugin_memelite，点击安装，耐心等待安装完成即可  
