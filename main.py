@@ -144,7 +144,7 @@ class MemePlugin(Star):
             assert isinstance(event, AiocqhttpMessageEvent)
             client = event.bot
             user_info = await client.get_stranger_info(user_id=int(target_id))
-            name = user_info.get('nick')
+            name = user_info.get('nickname')
             gender = user_info.get('sex')
             args["user_infos"] = [{"name": name, "gender": gender}]
 
