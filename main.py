@@ -100,17 +100,15 @@ class MemePlugin(Star):
         message_str = event.get_message_str()
         message_list = message_str.split()
 
-        if self.prefix:
-            if message_list[0] != self.prefix:
+        if self.prefix: # 前缀模式
+            if self.prefix not in message_list[0]:
                 return
-            else:
-                message_str.lstrip(self.prefix)
-                message_list.pop(0)
+
 
         if self.fuzzy_match:
-            keyword = next((k for k in meme_keywords_set if k in message_str), None)
+            keyword = next((k for k in meme_keywords_set if k in message_str), None) # 模糊匹配模式
         else:
-            keyword = next((k for k in meme_keywords_set if k in message_list), None)
+            keyword = next((k for k in meme_keywords_set if k in message_list[0]), None) # 精准匹配模式
         if not keyword:
             return
 
