@@ -23,7 +23,7 @@ _✨ [astrbot](https://github.com/nonebot/nonebot2) 表情包制作插件 ✨_
 ### 第一步，安装 meme-generator  
 - 从astrbot控制台安装（推荐）
 -![图片](https://github.com/user-attachments/assets/bb792d8e-7b0f-44e5-ba7f-b0ef2a80f71c)
-- 或者进到astrbot的虚拟环境里，运行下面的命令，耐心等待安装完成，
+- 或者进到astrbot的虚拟环境里并激活虚拟环境（不会的话问AI），运行下面的命令，耐心等待安装完成，
 
 ```
 pip install meme-generator
@@ -93,7 +93,8 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 - 本插件支持从引用消息中提取参数，如“[引用的消息] 喜报”
 - 提供的参数不够时，插件自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数来补充。
 示例
-![7802b10923f98245baadc84f56a3416](https://github.com/user-attachments/assets/6ba7adf4-ff6f-4817-8645-cc159f409d2c)
+![b421d15916a8db6109bb36c002ba2e5](https://github.com/user-attachments/assets/ec15b5f7-eec2-4552-814d-60dcc4196713)
+
 
 
 ## 📌 注意事项
