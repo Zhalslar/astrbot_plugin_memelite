@@ -42,7 +42,8 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 ## ⚙️ 配置
 请在astrbot面板配置，插件管理 -> astrbot_plugin_memelite -> 操作 -> 插件配置
-![tmp3026](https://github.com/user-attachments/assets/e2ffe7a0-8d7d-4446-8da7-2b4283f1baec)
+![Uploading tmp4C41.png…]()
+
 
 
 
