@@ -101,6 +101,8 @@ class MemePlugin(Star):
         message_list = message_str.split()
 
         if self.prefix: # 前缀模式
+            if not message_list:
+                return
             if self.prefix not in message_list[0]:
                 return
 
