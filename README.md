@@ -42,12 +42,6 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 ## ⚙️ 配置
 请在astrbot面板配置，插件管理 -> astrbot_plugin_memelite -> 操作 -> 插件配置
-
-|     配置项     |  默认值  |                       说明                        |
-|:-----------:|:-----:|:-----------------------------------------------:|
-| 触发meme的前缀   |   无   |  消息含有此前缀才能触发meme，默认为空（即不使用前缀），注意此配置不受bot全局前缀的影响 |
-|  是否模糊匹配触发 | False |        消息中含有关键词即可触发meme，谨慎打开，容易误触             |
-|   是否压缩图片    | True  |       压缩长或宽超过512px的静态生成图，防止大图展示，可防刷屏           |
 ![tmp3026](https://github.com/user-attachments/assets/e2ffe7a0-8d7d-4446-8da7-2b4283f1baec)
 
 
