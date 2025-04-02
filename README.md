@@ -95,6 +95,7 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 ## 📌 注意事项
 1. 本插件之前是本人在nonebot上随手写的，现在适配了一下astrbot，插件刚发布，难免有些意料之外的bug，欢迎提issue
 2. 本插件目前还不能做到自动安装好meme-generator，后续可能会支持自动安装
+3. 想第一时间得到反馈的可以来作者的插件反馈群（QQ群）：460973561
 
 
 ## 📜 开源协议
