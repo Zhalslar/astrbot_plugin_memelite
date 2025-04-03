@@ -31,6 +31,10 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 # 控制台重启AstrBot
 ```
 
+- 首次启动插件会触发资源下载（如果没触发，请重载一下插件），然后会自动下载两千多张图片，下载速度取决于网速，
+  ![图片](https://github.com/user-attachments/assets/8d6c2fb6-3b79-49b0-ba85-eca1d128ca64)
+
+
 ## ⚙️ 配置
 请在astrbot面板配置，插件管理 -> astrbot_plugin_memelite -> 操作 -> 插件配置
 ![图片](https://github.com/user-attachments/assets/fe3c6adf-f210-4d93-9d8c-a06216507f10)
