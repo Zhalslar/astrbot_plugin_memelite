@@ -20,6 +20,11 @@ _✨ [astrbot](https://github.com/nonebot/nonebot2) 表情包制作插件 ✨_
 
 ## 📦 安装
 
+### 第一步，安装 meme-generator  
+- 本插件已支持自动安装meme-generator ，此步可以跳过了。若是发现没能正常安装，可尝试以下方法：
+  - 从astrbot控制台安装，pip安装输入框里填写 meme-generator，回车
+  - 或者进到astrbot的虚拟环境里并激活虚拟环境（不会的话问AI），运行命令  pip install meme-generator
+### 第二步，安装本插件
 - 可以直接在astrbot的插件市场搜索astrbot_plugin_memelite，点击安装，耐心等待安装完成即可  
 
 - 或者可以直接克隆源码到插件文件夹：
@@ -31,8 +36,8 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 # 控制台重启AstrBot
 ```
 - Docker部署的astrbot，安装完本插件时，会因路径不存在而报错，请自行解决（我还没测试过doge）
-
-- 首次启动插件会触发资源下载（如果没触发，请重载一下插件），然后会自动下载两千多张图片，下载速度取决于网速，下载完后插件就能正常使用了
+### 第三步，下载必要资源
+- 从插件配置面板重载插件，首次启动插件会触发资源下载，然后会自动下载两千多张图片，下载速度取决于网速，下载完后插件就能正常使用了
   ![图片](https://github.com/user-attachments/assets/8d6c2fb6-3b79-49b0-ba85-eca1d128ca64)
 
 
