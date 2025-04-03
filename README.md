@@ -89,7 +89,7 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 ## 📌 注意事项
 1. 想第一时间得到反馈的可以来作者的插件反馈群（QQ群）：460973561
 2. 感觉本插件做得还不错的话，点个star呗（右上角的星星）
-3. 一些会引起不适的meme（如'射','撅'）需要自己去添加：前往[meme-generator 额外表情仓库]，(https://github.com/MemeCrafters/meme-generator-contrib),
+3. 一些会引起不适的meme（如'射','撅'）需要自己去添加：前往[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib),
  将仓库中memes文件夹里的文件添加到astrbot目录下的路径：./venv/Lib/site-packages/meme_generator/memes，然后重启astrbot即可。
 
 
