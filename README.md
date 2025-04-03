@@ -87,9 +87,10 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 
 ## 📌 注意事项
-1. 本插件之前是本人在nonebot上随手写的，现在适配了一下astrbot，插件刚发布，难免有些意料之外的bug，欢迎提issue
-2. 本插件目前还不能做到自动安装好meme-generator，后续可能会支持自动安装
-3. 想第一时间得到反馈的可以来作者的插件反馈群（QQ群）：460973561
+1. 想第一时间得到反馈的可以来作者的插件反馈群（QQ群）：460973561
+2. 感觉本插件做得还不错的话，点个star呗（右上角的星星）
+3. 一些会引起不适的meme（如'射','撅'）需要自己去添加，[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib),
+ 将仓库中memes文件夹里的文件添加到astrbot目录下的路径：./venv/Lib/site-packages/meme_generator/memes
 
 
 ## 📜 开源协议
