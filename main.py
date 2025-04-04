@@ -1,5 +1,3 @@
-import os
-from datetime import datetime
 
 import aiohttp
 from meme_generator import Meme, get_memes
@@ -16,22 +14,17 @@ from astrbot.core.platform import AstrMessageEvent
 import asyncio
 import io
 from typing import List, Any
-import httpx
-from PIL import Image, ImageSequence
+from PIL import Image
 
-import astrbot.core.message.components as comp
+import astrbot.core.message.components as Comp
 from astrbot.core.star.filter.event_message_type import EventMessageType
 
-
-TEMP_DIR = "./data/plugins/astrbot_plugin_memelite_data/temp"
-if not os.path.exists(TEMP_DIR):
-    os.makedirs(TEMP_DIR)
 
 memes: list[Meme] = get_memes()
 meme_keywords_list = [keyword.lower() for meme in memes for keyword in meme.keywords] # 有序列表
 meme_keywords_set = set(meme_keywords_list) # 无序集合
 
-@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）", "1.0.6")
+@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）", "1.0.8")
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -75,12 +68,9 @@ class MemePlugin(Star):
         )
 
         preview = meme.generate_preview()
-        image_name = f"{keyword}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_preview"
-        temp_path = self.save_image(preview, image_name)
-
         chain = [
-            comp.Plain(meme_info),
-            comp.Image.fromFileSystem(temp_path),
+            Comp.Plain(meme_info),
+            Comp.Image.fromIO(preview),
         ]
         yield event.chain_result(chain)
 
@@ -133,7 +123,7 @@ class MemePlugin(Star):
         self_id = event.get_self_id()
 
         # 获取目标用户的参数
-        seg = [seg for seg in messages if (isinstance(seg, comp.At)) and str(seg.qq) != self_id]
+        seg = [seg for seg in messages if (isinstance(seg, Comp.At)) and str(seg.qq) != self_id]
         target_id = seg[0].qq if seg else send_id
         target_name = seg[0].name if seg else sender_name
 
@@ -149,22 +139,22 @@ class MemePlugin(Star):
 
         async def _process_segment(_seg):
             """Process a single message segment."""
-            if isinstance(_seg, comp.Image):
+            if isinstance(_seg, Comp.Image):
                 img_url = seg.url
                 msg_image = await self.download_image(img_url)
                 images.append(msg_image)
-            elif isinstance(_seg, comp.At):
+            elif isinstance(_seg, Comp.At):
                 if str(seg.qq) != self_id:
                     at_avatar = await self.get_avatar(str(seg.qq))
                     images.append(at_avatar)
-            elif isinstance(_seg, comp.Plain):
+            elif isinstance(_seg, Comp.Plain):
                 text = seg.text
                 if text != keyword:
                     texts.append(text)
 
 
         # 如果有引用消息，也遍历之
-        reply_seg = next((seg for seg in messages if isinstance(seg, comp.Reply)), None)
+        reply_seg = next((seg for seg in messages if isinstance(seg, Comp.Reply)), None)
         if reply_seg:
             for seg in reply_seg.chain:
                 await _process_segment(seg)
@@ -190,7 +180,7 @@ class MemePlugin(Star):
         texts = texts[:max_texts]
 
         try:
-            img: io.BytesIO = await run_sync(meme)(
+            image_io = await run_sync(meme)(
                 images=images,
                 texts=texts,
                 args=args
@@ -198,17 +188,11 @@ class MemePlugin(Star):
         except MemeGeneratorException as e:
             logger.error(e.message)
             return
-
-        if self.is_compress_image:
-            image_name = f"{keyword}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_compressed"
-            temp_path = self.compress_image(img, image_name)
-        else:
-            image_name = f"{keyword}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            temp_path = self.save_image(img, image_name)
-
-        yield event.image_result(temp_path)
-        if not self.save_temp_image:
-            os.remove(temp_path)
+        if self.is_compress_image and Image.open(image_io).format != "GIF":
+            image_io = self.compress_image(image_io)
+        image_bytes = image_io.getvalue()
+        chain = [Comp.Image.fromBytes(image_bytes)]
+        yield event.chain_result(chain)
 
 
 
@@ -223,44 +207,19 @@ class MemePlugin(Star):
         return None
 
 
-    @staticmethod
-    def save_image(image_bytesio, image_name:str):
-        """保存图片（支持gif）"""
-        img = Image.open(image_bytesio)
-        original_format = img.format if img.format else 'PNG'
-        temp_path = os.path.join(TEMP_DIR, f"{image_name}.{original_format.lower()}")
-        if original_format.upper() == 'GIF':
-            frames = [frame.copy() for frame in ImageSequence.Iterator(img)]
-            frames[0].save(
-                temp_path,
-                format='GIF',
-                save_all=True,
-                append_images=frames[1:],
-                loop=0,
-                duration=img.info.get('duration', 100)
-            )
-        else:
-            img.save(temp_path, format=original_format)
-        return temp_path
-
-
-    def compress_image(self, image_bytesio, image_name:str, max_size: int = 512) -> str:
+    def compress_image(self, image_io, max_size: int = 512) -> io.BytesIO | None:
         """压缩图片到max_size大小，gif不处理"""
         try:
-            img = Image.open(image_bytesio)
+            img = Image.open(image_io)
             if img.format == "GIF":
-                temp_path = self.save_image(image_bytesio,image_name)
-                return temp_path
-
+                return
             if img.width > max_size or img.height > max_size:
                 img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
 
-            # 将压缩后的图片保存到临时字节流
             output_buffer = io.BytesIO()
             img.save(output_buffer, format=img.format)
             output_buffer.seek(0)
-            temp_path = self.save_image(output_buffer, image_name)
-            return temp_path
+            return output_buffer
 
         except Exception as e:
             raise ValueError(f"图片压缩失败: {e}")
@@ -291,12 +250,15 @@ class MemePlugin(Star):
 
     @staticmethod
     async def get_avatar(user_id: str) -> bytes:
-        """获取头像"""
         avatar_url = f"https://q4.qlogo.cn/headimg_dl?dst_uin={user_id}&spec=640"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(avatar_url, timeout=10)
-            response.raise_for_status()
-            return response.content
+        try:
+            async with aiohttp.ClientSession() as client:
+                response = await client.get(avatar_url, timeout=10)
+                response.raise_for_status()
+                return await response.read()
+        except Exception as e:
+            logger.error(f"下载头像失败: {e}")
+            return b''
 
 
 
