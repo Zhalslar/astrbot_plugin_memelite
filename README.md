@@ -21,15 +21,9 @@ _✨ [astrbot](https://github.com/nonebot/nonebot2) 表情包制作插件 ✨_
 ## 📦 安装
 
 ### 第一步，安装 meme-generator  
-- 从astrbot控制台安装（推荐）
--![图片](https://github.com/user-attachments/assets/bb792d8e-7b0f-44e5-ba7f-b0ef2a80f71c)
-- 或者进到astrbot的虚拟环境里并激活虚拟环境（不会的话问AI），运行下面的命令，耐心等待安装完成，
-
-```
-pip install meme-generator
-```
-- 如果是docker部署的astrbot，还需挂载meme-generator到astrbot的虚拟环境里，具体怎么做我还没测，可请前往meme仓库看具体安装教程：[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)
-
+- 本插件已支持自动安装meme-generator ，此步可以跳过了。若是发现没能正常安装，可尝试以下方法：
+  - 从astrbot控制台安装，pip安装输入框里填写 meme-generator，回车
+  - 或者进到astrbot的虚拟环境里并激活虚拟环境（不会的话问AI），运行命令  pip install meme-generator
 ### 第二步，安装本插件
 - 可以直接在astrbot的插件市场搜索astrbot_plugin_memelite，点击安装，耐心等待安装完成即可  
 
@@ -41,6 +35,11 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 # 控制台重启AstrBot
 ```
+- Docker部署的astrbot，安装完本插件时，会因路径不存在而报错，请自行解决（我还没测试过doge）
+### 第三步，下载必要资源
+- 从插件配置面板重载插件，首次启动插件会触发资源下载，然后会自动下载两千多张图片，下载速度取决于网速，下载完后插件就能正常使用了
+  ![图片](https://github.com/user-attachments/assets/8d6c2fb6-3b79-49b0-ba85-eca1d128ca64)
+
 
 ## ⚙️ 配置
 请在astrbot面板配置，插件管理 -> astrbot_plugin_memelite -> 操作 -> 插件配置
@@ -98,9 +97,10 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 
 ## 📌 注意事项
-1. 本插件之前是本人在nonebot上随手写的，现在适配了一下astrbot，插件刚发布，难免有些意料之外的bug，欢迎提issue
-2. 本插件目前还不能做到自动安装好meme-generator，后续可能会支持自动安装
-3. 想第一时间得到反馈的可以来作者的插件反馈群（QQ群）：460973561
+1. 想第一时间得到反馈的可以来作者的插件反馈群（QQ群）：460973561
+2. 感觉本插件做得还不错的话，点个star呗（右上角的星星）
+3. 一些会引起不适的meme（如'射','撅'）需要自己去添加：前往[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib),
+ 将仓库中memes文件夹里的文件添加到astrbot目录下的路径：./venv/Lib/site-packages/meme_generator/memes，然后重启astrbot即可。
 
 
 ## 📜 开源协议
