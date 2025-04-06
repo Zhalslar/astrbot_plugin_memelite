@@ -96,7 +96,6 @@ class MemePlugin(Star):
         if self.prefix: # 前缀模式
             if self.prefix not in first_arg:
                 return
-            first_arg = first_arg.replace(self.prefix, '', 1)  # 去除前缀
 
         if self.fuzzy_match:
             keyword = next((k for k in meme_keywords_set if k in message_str), None) # 模糊匹配模式
@@ -110,9 +109,7 @@ class MemePlugin(Star):
         args: dict[str, Any] = {}
 
         meme: Meme = self.find_meme(keyword)
-        min_images: int = meme.params_type.min_images
         max_images: int = meme.params_type.max_images
-        min_texts: int = meme.params_type.min_texts
         max_texts: int = meme.params_type.max_texts
         default_texts: list[str] = meme.params_type.default_texts
 
