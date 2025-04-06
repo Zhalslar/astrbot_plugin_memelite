@@ -118,23 +118,11 @@ class MemePlugin(Star):
 
         messages = event.get_messages()
         send_id = event.get_sender_id()
-        sender_name = event.get_sender_name()
         self_id = event.get_self_id()
+        sender_name = event.get_sender_name()
 
-        # 获取目标用户的参数
-        segs = [seg for seg in messages if (isinstance(seg, Comp.At)) and str(seg.qq) != self_id]
-        target_id = segs[0].qq if segs else send_id
-        target_name = segs[0].name if segs else sender_name
-
-        # aiocqhttp消息平台可调用Onebot接口“get_stranger_info”获取额外参数
-        if event.get_platform_name() == "aiocqhttp":
-            from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
-            assert isinstance(event, AiocqhttpMessageEvent)
-            client = event.bot
-            user_info = await client.get_stranger_info(user_id=int(target_id))
-            name = user_info.get('nickname')
-            gender = user_info.get('sex')
-            args["user_infos"] = [{"name": name, "gender": gender}]
+        target_ids: list = []
+        target_name: str = sender_name
 
         async def _process_segment(_seg):
             """Process a single message segment."""
@@ -143,15 +131,16 @@ class MemePlugin(Star):
                 msg_image = await self.download_image(img_url)
                 images.append(msg_image)
             elif isinstance(_seg, Comp.At):
-                seg_qq = _seg.qq
+                seg_qq = str(_seg.qq)
                 if str(seg_qq) != self_id:
+                    target_ids.append(seg_qq)
                     at_avatar = await self.get_avatar(str(seg_qq))
                     images.append(at_avatar)
             elif isinstance(_seg, Comp.Plain):
-                text: str = _seg.text.strip()
-                arg_text = text.lstrip(self.prefix).strip()
-                if arg_text != keyword:
-                    texts.append(arg_text)
+                plains: list[str] = _seg.text.strip().split()
+                for text in plains:
+                    if text != keyword and text != self.prefix:
+                        texts.append(text)
 
 
         # 如果有引用消息，也遍历之
@@ -164,20 +153,33 @@ class MemePlugin(Star):
         for seg in messages:
             await _process_segment(seg)
 
+        target_ids.append(send_id)
+
+        # aiocqhttp消息平台可调用Onebot接口“get_stranger_info”获取额外参数
+        if event.get_platform_name() == "aiocqhttp":
+            from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
+            assert isinstance(event, AiocqhttpMessageEvent)
+            client = event.bot
+            target_id = target_ids[0] # 默认取用第一个用户
+            user_info = await client.get_stranger_info(user_id=int(target_id))
+            target_name = user_info.get('nickname')
+            gender = user_info.get('sex')
+            args["user_infos"] = [{"name": target_name, "gender": gender}]
+
         # 确保图片数量在min_images到max_images之间
-        if len(images) < min_images:
+        if len(images) < max_images and send_id:
             use_avatar = await self.get_avatar(send_id)
             images.insert(0, use_avatar)
-            if len(images) < min_images:
-                bot_avatar = await self.get_avatar(self_id)
-                images.append(bot_avatar)
+        if len(images) < max_images and self_id:
+            bot_avatar = await self.get_avatar(self_id)
+            images.append(bot_avatar)
         images = images[:max_images]
 
         # 确保文本数量在min_texts到max_texts之间
-        if len(texts) < min_texts:
-            texts.extend([target_name])
-            if len(texts) < min_texts:
-                texts.extend(default_texts[:min_texts - len(texts)])
+        if len(texts) < max_texts and target_name:
+            texts.append(target_name)
+        if len(texts) < max_texts and default_texts:
+            texts.extend(default_texts[:max_texts - len(texts)])
         texts = texts[:max_texts]
 
         try:
