@@ -52,6 +52,7 @@ class MemePlugin(Star):
     async def meme_detail_show(self, event: AstrMessageEvent, keyword: str=None):
         if not keyword:
             yield event.plain_result("未指定表情")
+            return
         target_keyword = next((k for k in meme_keywords_set if k in event.get_message_str()), None)
         meme = self.find_meme(target_keyword)
 
@@ -67,10 +68,10 @@ class MemePlugin(Star):
             f"预览图片：\n"
         )
 
-        preview = meme.generate_preview()
+        preview: bytes = meme.generate_preview().getvalue()
         chain = [
             Comp.Plain(meme_info),
-            Comp.Image.fromIO(preview),
+            Comp.Image.fromBytes(preview),
         ]
         yield event.chain_result(chain)
 
@@ -90,11 +91,12 @@ class MemePlugin(Star):
         if not message_str:  # 过滤非文本消息
             return
         message_list = message_str.split()
+        first_arg = message_list[0]
 
         if self.prefix: # 前缀模式
-            if self.prefix not in message_list[0]:
+            if self.prefix not in first_arg:
                 return
-            message_list[0] = message_list[0].replace(self.prefix, '', 1)  # 去除前缀
+            first_arg = first_arg.replace(self.prefix, '', 1)  # 去除前缀
 
         if self.fuzzy_match:
             keyword = next((k for k in meme_keywords_set if k in message_str), None) # 模糊匹配模式
@@ -106,9 +108,6 @@ class MemePlugin(Star):
         images: List[bytes] = []
         texts: List[str] = []
         args: dict[str, Any] = {}
-
-        valid_texts = [text for text in message_str.split() if text != keyword]
-        texts.extend(valid_texts)
 
         meme: Meme = self.find_meme(keyword)
         min_images: int = meme.params_type.min_images
@@ -144,13 +143,15 @@ class MemePlugin(Star):
                 msg_image = await self.download_image(img_url)
                 images.append(msg_image)
             elif isinstance(_seg, Comp.At):
-                if str(seg.qq) != self_id:
-                    at_avatar = await self.get_avatar(str(seg.qq))
+                seg_qq = _seg.qq
+                if str(seg_qq) != self_id:
+                    at_avatar = await self.get_avatar(str(seg_qq))
                     images.append(at_avatar)
             elif isinstance(_seg, Comp.Plain):
-                text = seg.text
-                if text != keyword:
-                    texts.append(text)
+                text: str = _seg.text.strip()
+                arg_text = text.lstrip(self.prefix).strip()
+                if arg_text != keyword:
+                    texts.append(arg_text)
 
 
         # 如果有引用消息，也遍历之
@@ -164,19 +165,19 @@ class MemePlugin(Star):
             await _process_segment(seg)
 
         # 确保图片数量在min_images到max_images之间
-        if len(images) < min_images:
+        if len(images) < max_images:
             use_avatar = await self.get_avatar(send_id)
             images.insert(0, use_avatar)
-            if len(images) < min_images:
+            if len(images) < max_images:
                 bot_avatar = await self.get_avatar(self_id)
                 images.append(bot_avatar)
         images = images[:max_images]
 
         # 确保文本数量在min_texts到max_texts之间
-        if len(texts) < min_texts:
+        if len(texts) < max_texts:
             texts.extend([target_name])
-            if len(texts) < min_texts:
-                texts.extend(default_texts[:min_texts - len(texts)])
+            if len(texts) < max_texts:
+                texts.extend(default_texts[:max_texts])
         texts = texts[:max_texts]
 
         try:
@@ -185,6 +186,7 @@ class MemePlugin(Star):
                 texts=texts,
                 args=args
             )
+
         except MemeGeneratorException as e:
             logger.error(e.message)
             return
@@ -206,8 +208,8 @@ class MemePlugin(Star):
                 return meme
         return None
 
-
-    def compress_image(self, image_io, max_size: int = 512) -> io.BytesIO | None:
+    @staticmethod
+    def compress_image(image_io, max_size: int = 512) -> io.BytesIO | None:
         """压缩图片到max_size大小，gif不处理"""
         try:
             img = Image.open(image_io)
