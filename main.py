@@ -122,9 +122,9 @@ class MemePlugin(Star):
         self_id = event.get_self_id()
 
         # 获取目标用户的参数
-        seg = [seg for seg in messages if (isinstance(seg, Comp.At)) and str(seg.qq) != self_id]
-        target_id = seg[0].qq if seg else send_id
-        target_name = seg[0].name if seg else sender_name
+        segs = [seg for seg in messages if (isinstance(seg, Comp.At)) and str(seg.qq) != self_id]
+        target_id = segs[0].qq if segs else send_id
+        target_name = segs[0].name if segs else sender_name
 
         # aiocqhttp消息平台可调用Onebot接口“get_stranger_info”获取额外参数
         if event.get_platform_name() == "aiocqhttp":
@@ -165,19 +165,19 @@ class MemePlugin(Star):
             await _process_segment(seg)
 
         # 确保图片数量在min_images到max_images之间
-        if len(images) < max_images:
+        if len(images) < min_images:
             use_avatar = await self.get_avatar(send_id)
             images.insert(0, use_avatar)
-            if len(images) < max_images:
+            if len(images) < min_images:
                 bot_avatar = await self.get_avatar(self_id)
                 images.append(bot_avatar)
         images = images[:max_images]
 
         # 确保文本数量在min_texts到max_texts之间
-        if len(texts) < max_texts:
+        if len(texts) < min_texts:
             texts.extend([target_name])
-            if len(texts) < max_texts:
-                texts.extend(default_texts[:max_texts])
+            if len(texts) < min_texts:
+                texts.extend(default_texts[:min_texts - len(texts)])
         texts = texts[:max_texts]
 
         try:
