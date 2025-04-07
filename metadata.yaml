@@ -1,6 +1,6 @@
 name: astrbot_plugin_memelite # 这是你的插件的唯一识别名。
 desc: 表情包生成器，制作各种沙雕表情（本地部署，但轻量化），支持模糊匹配触发、精准匹配触发、无前缀触发、自动压缩过大图片  # 插件简短描述
 help: 关键词触发表情包生成  # 插件的帮助信息
-version: v1.1.1 # 插件版本号。格式：v1.1.1 或者 v1.1
+version: v1.1.2 # 插件版本号。格式：v1.1.1 或者 v1.1
 author: Zhalslar # 作者
 repo: https://github.com/Zhalslar/astrbot_plugin_memelite # 插件的仓库地址
