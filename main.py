@@ -49,22 +49,27 @@ class MemePlugin(Star):
         yield event.image_result(url)
 
     @filter.command("表情详情", desc="查看指定meme需要的参数")
-    async def meme_detail_show(self, event: AstrMessageEvent, keyword: str=None):
+    async def meme_detail_show(self, event: AstrMessageEvent, keyword: str|None=None):
         if not keyword:
-            yield event.plain_result("未指定表情")
+            yield event.plain_result("未指定要查看的meme")
             return
         target_keyword = next((k for k in meme_keywords_set if k in event.get_message_str()), None)
-        meme = self.find_meme(target_keyword)
-
+        if target_keyword is None:
+            yield event.plain_result("未支持的meme关键词")
+            return
+        meme: Meme|None = self.find_meme(target_keyword)
+        if not meme:
+            yield event.plain_result("未找到相关meme")
+            return
         meme_info = (
-            f"名称：{meme.key}：\n"
-            f"别名：{meme.keywords}：\n"
+            f"名称：{meme.key}\n"
+            f"别名：{meme.keywords}\n"
             f"最小图片数：{meme.params_type.min_images}\n"
             f"最大图片数：{meme.params_type.max_images}\n"
             f"最小文本数：{meme.params_type.min_texts}\n"
             f"最大文本数：{meme.params_type.max_texts}\n"
             f"默认文本：{meme.params_type.default_texts}\n"
-            f"标签：{list(meme.tags)}：\n"
+            f"标签：{list(meme.tags)}\n"
             f"预览图片：\n"
         )
 
@@ -77,7 +82,7 @@ class MemePlugin(Star):
 
 
     @filter.event_message_type(EventMessageType.ALL)
-    async def meme_handle(self, event: AstrMessageEvent) -> None:
+    async def meme_handle(self, event: AstrMessageEvent):
         """
          处理 meme 生成的核心逻辑。
 
@@ -108,7 +113,9 @@ class MemePlugin(Star):
         texts: List[str] = []
         args: dict[str, Any] = {}
 
-        meme: Meme = self.find_meme(keyword)
+        meme: Meme|None = self.find_meme(keyword)
+        if meme is None:
+            return
         max_images: int = meme.params_type.max_images
         max_texts: int = meme.params_type.max_texts
         default_texts: list[str] = meme.params_type.default_texts
@@ -124,9 +131,10 @@ class MemePlugin(Star):
         async def _process_segment(_seg):
             """Process a single message segment."""
             if isinstance(_seg, Comp.Image):
-                img_url = seg.url
-                msg_image = await self.download_image(img_url)
-                images.append(msg_image)
+                if img_url := _seg.url:
+                    if msg_image := await self.download_image(img_url):
+                        images.append(msg_image)
+
             elif isinstance(_seg, Comp.At):
                 seg_qq = str(_seg.qq)
                 if str(seg_qq) != self_id:
@@ -142,7 +150,7 @@ class MemePlugin(Star):
 
         # 如果有引用消息，也遍历之
         reply_seg = next((seg for seg in messages if isinstance(seg, Comp.Reply)), None)
-        if reply_seg:
+        if reply_seg and reply_seg.chain:
             for seg in reply_seg.chain:
                 await _process_segment(seg)
 
@@ -191,9 +199,12 @@ class MemePlugin(Star):
             return
         if self.is_compress_image and Image.open(image_io).format != "GIF":
             image_io = self.compress_image(image_io)
+            if image_io is None:
+                yield event.plain_result("图片压缩失败")
+                return
         image_bytes = image_io.getvalue()
         chain = [Comp.Image.fromBytes(image_bytes)]
-        yield event.chain_result(chain)
+        yield event.chain_result(chain) # type: ignore
 
 
 
@@ -227,7 +238,7 @@ class MemePlugin(Star):
 
 
     @staticmethod
-    async def download_image(url: str) -> bytes:
+    async def download_image(url: str) -> bytes | None:
         url = url.replace("https://", "http://")
         try:
             async with aiohttp.ClientSession() as client:
@@ -239,18 +250,27 @@ class MemePlugin(Star):
 
     @staticmethod
     async def get_events_on_history(month: str) -> str:
+        """
+        获取百度百科历史上的今天事件数据。
+
+        :param month: 月份，格式为两位数字，例如 "04" 表示四月
+        :return: 返回解析后的 JSON 数据字符串，如果失败则返回空字符串
+        """
         try:
             async with aiohttp.ClientSession() as client:
                 url = f"https://baike.baidu.com/cms/home/eventsOnHistory/{month}.json"
-                response = await client.get(url)
-                response.encoding = "utf-8"
-                return await response.text()
+                async with client.get(url) as response:
+                    if response.status != 200:
+                        logger.error(f"请求失败，状态码: {response.status}")
+                        return ""
+                    return await response.text(encoding="utf-8")
         except Exception as e:
             logger.error(f"任务处理失败: {e}")
             return ""
-
+        
     @staticmethod
     async def get_avatar(user_id: str) -> bytes:
+        """下载头像"""
         avatar_url = f"https://q4.qlogo.cn/headimg_dl?dst_uin={user_id}&spec=640"
         try:
             async with aiohttp.ClientSession() as client:
