@@ -34,9 +34,6 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 # 控制台重启AstrBot
 ```
-
-- Docker部署的astrbot，安装完本插件时，会因路径不存在而报错，请自行解决（我还没测试过doge）
-
 ### 第三步，下载必要资源
 
 - 从插件配置面板重载插件，首次启动插件会触发资源下载，然后会自动下载两千多张图片，下载速度取决于网速，下载完后插件就能正常使用了
