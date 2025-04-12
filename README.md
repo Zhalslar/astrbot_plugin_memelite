@@ -34,6 +34,15 @@ git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 # 控制台重启AstrBot
 ```
+
+ Docker部署的astrbot，直接安装本插件可能会报错，可能是缺系统依赖，进入容器执行：
+
+```bash
+apt-get update && apt-get install -y libgl1 libglib2.0-0
+```
+
+之后再安装本插件即可，若是还遇到其他错误，欢迎提issues
+
 ### 第三步，下载必要资源
 
 - 从插件配置面板重载插件，首次启动插件会触发资源下载，然后会自动下载两千多张图片，下载速度取决于网速，下载完后插件就能正常使用了
