@@ -18,7 +18,6 @@ _✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨
 - 本插件负责处理聊天机器人与[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)的对接，具体表情包制作相关资源文件和代码在其仓库中可以找到。
 - 本插件使用本地部署的meme-generator。同时尽量保持插件的轻量化，表情包生成快，性能要求低  
 
-
 ## 📦 安装
 
 ### 第一步，安装 meme-generator  
@@ -113,18 +112,9 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 - 如果遇到中文字体显示为乱码，请按照[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)的文档安装缺失的字体
 - 如果想第一时间得到反馈，请进作者的插件反馈群（QQ群）：460973561
 
-## 🌟 支持
-
-- Star 这个项目！（右上角的星星）
-
 ## 👥 贡献指南
 
-欢迎通过以下方式参与项目：
-
+- 🌟 Star 这个项目！（点右上角的星星，感谢支持！）
 - 🐛 提交 Issue 报告问题
 - 💡 提出新功能建议
 - 🔧 提交 Pull Request 改进代码
-
-## 📜 开源协议
-
-本项目采用 [MIT License](LICENSE)
