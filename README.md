@@ -1,44 +1,76 @@
-:name
-astrbot_plugin_memelite
-✨ astrbot 表情包制作插件 ✨
+<div align="center">
 
-License Python 3.10+ AstrBot GitHub
+![:name](https://count.getloli.com/@astrbot_plugin_memelite?name=astrbot_plugin_memelite&theme=minecraft&padding=6&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
 
-💡介绍
-本插件负责处理聊天机器人与表情包生成器 meme-generator的对接，具体表情包制作相关资源文件和代码在其仓库中可以找到。
-本插件使用本地部署的meme-generator。同时尽量保持插件的轻量化，表情包生成快，性能要求低
-📦 安装
-第一步，安装 meme-generator
-本插件已支持自动安装meme-generator ，此步可以跳过了。若是发现没能正常安装，可尝试以下方法：
-从astrbot控制台安装，pip安装输入框里填写 meme-generator，回车
-或者进到astrbot的虚拟环境里并激活虚拟环境（不会的话问AI），运行命令 pip install meme-generator
-第二步，安装本插件
-可以直接在astrbot的插件市场搜索astrbot_plugin_memelite，点击安装，耐心等待安装完成即可
 
-或者可以直接克隆源码到插件文件夹：
+# astrbot_plugin_memelite
 
+_✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨_  
+
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![AstrBot](https://img.shields.io/badge/AstrBot-3.4%2B-orange.svg)](https://github.com/Soulter/AstrBot)
+[![GitHub](https://img.shields.io/badge/作者-Zhalslar-blue)](https://github.com/Zhalslar)
+
+</div>
+
+## 💡介绍
+
+- 本插件负责处理聊天机器人与[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)的对接，具体表情包制作相关资源文件和代码在其仓库中可以找到。
+- 本插件使用本地部署的meme-generator。同时尽量保持插件的轻量化，表情包生成快，性能要求低  
+
+
+## 📦 安装
+
+### 第一步，安装 meme-generator  
+
+- 本插件已支持自动安装meme-generator ，此步可以跳过了。若是发现没能正常安装，可尝试以下方法：
+  - 从astrbot控制台安装，pip安装输入框里填写 meme-generator，回车
+  - 或者进到astrbot的虚拟环境里并激活虚拟环境（不会的话问AI），运行命令  pip install meme-generator
+
+### 第二步，安装本插件
+
+- 可以直接在astrbot的插件市场搜索astrbot_plugin_memelite，点击安装，耐心等待安装完成即可  
+
+- 或者可以直接克隆源码到插件文件夹：
+
+```bash
 # 克隆仓库到插件目录
 cd /AstrBot/data/plugins
 git clone https://github.com/Zhalslar/astrbot_plugin_memelite
 
 # 控制台重启AstrBot
-Docker部署的astrbot，直接安装本插件可能会报错，可能是缺系统依赖，进入容器执行：
+```
 
+ Docker部署的astrbot，直接安装本插件可能会报错，可能是缺系统依赖，进入容器执行：
+
+```bash
 apt-get update && apt-get install -y libgl1 libglib2.0-0
+```
+
 之后再安装本插件即可，若是还遇到其他错误，欢迎提issues
 
-第三步，下载必要资源
-从插件配置面板重载插件，首次启动插件会触发资源下载，然后会自动下载两千多张图片，下载速度取决于网速，下载完后插件就能正常使用了 图片
-⚙️ 配置
-请在astrbot面板配置，插件管理 -> astrbot_plugin_memelite -> 操作 -> 插件配置 图片
+### 第三步，下载必要资源
 
-⌨️ 命令
-命令	说明
-/meme帮助	查看所有能触发meme合成的关键词
-/meme详情 xxx	具体查看某个meme的参数
-{关键词}	触发meme合成
+- 从插件配置面板重载插件，首次启动插件会触发资源下载，然后会自动下载两千多张图片，下载速度取决于网速，下载完后插件就能正常使用了
+  ![图片](https://github.com/user-attachments/assets/8d6c2fb6-3b79-49b0-ba85-eca1d128ca64)
+
+## ⚙️ 配置
+
+请在astrbot面板配置，插件管理 -> astrbot_plugin_memelite -> 操作 -> 插件配置
+![图片](https://github.com/user-attachments/assets/fe3c6adf-f210-4d93-9d8c-a06216507f10)
+
+## ⌨️ 命令
+
+|     命令      |                    说明                    |
+|:-------------:|:-----------------------------------------------:|
+| /meme帮助      | 查看所有能触发meme合成的关键词  |
+| /meme详情 xxx  | 具体查看某个meme的参数         |
+|   {关键词}     |   触发meme合成            |
+
 , 关键词包括：
 
+```plaintext
 ['5000兆', '戒导', '逆转裁判气泡', '二次元入口', '上瘾', '毒瘾发作', '添乱', '给社会添乱', '一样', '支付宝支付', '一直', '我永远喜欢', '防诱拐',
  '阿尼亚喜欢', '鼓掌', '阿罗娜扔', '升天', '问问', '亚托莉枕头', '继续干活', '打工人', '悲报', 'ba说', '拍头', '揍', '啃', '真寻挨骂', '高血压',
  '蔚蓝档案标题', 'batitle', '波奇手稿', '布洛妮娅举牌', '大鸭鸭举牌', '奶茶', '遇到困难请拨打', '咖波画', '咖波指', '咖波撕', '咖波蹭', '咖波贴'
@@ -65,15 +97,27 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 的东西', '我想上的', '为什么@我', '为什么要有手', '风车转', '许愿失败', '木鱼', '膜', '膜拜', '吴京中国', '椰树椰汁', '你的跨年', 'yt', 'youtu ube', 
 '致电', '你应该致电']
 
-🐔 使用说明
-本插件支持从原始消息中提取参数，请用空格隔开参数，如 “喜报 nmsl”
-本插件支持从引用消息中提取参数，如“[引用的消息] 喜报”
-提供的参数不够时，插件自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数来补充。 示例 b421d15916a8db6109bb36c002ba2e5
-📌 注意事项
-一些会引起不适的meme（如'射','撅'）需要自己去添加：meme-generator 额外表情仓库, 将meme-generator仓库中memes文件夹里的文件 添加到 astrbot虚拟环境目录下的meme_generator/memes文件夹里（如果你不会，建议放弃，没有水平就别搞），然后重启astrbot即可。
-如果遇到中文字体显示为乱码，请按照表情包生成器 meme-generator的文档安装缺失的字体
-如果想第一时间得到反馈，请进作者的插件反馈群（QQ群）：460973561
-🌟 支持
-Star 这个项目！（右上角的星星）
-📜 开源协议
-本项目采用 MIT License
+```
+
+## 🐔 使用说明
+
+- 本插件支持从原始消息中提取参数，请用空格隔开参数，如 “喜报 nmsl”
+- 本插件支持从引用消息中提取参数，如“[引用的消息] 喜报”
+- 提供的参数不够时，插件自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数来补充。
+示例
+![b421d15916a8db6109bb36c002ba2e5](https://github.com/user-attachments/assets/ec15b5f7-eec2-4552-814d-60dcc4196713)
+
+## 📌 注意事项
+
+- 一些会引起不适的meme（如'射','撅'）需要自己去添加：[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib),
+  将meme-generator仓库中memes文件夹里的文件 添加到 astrbot虚拟环境目录下的meme_generator/memes文件夹里（如果你不会，建议放弃，没有水平就别搞），然后重启astrbot即可。
+- 如果遇到中文字体显示为乱码，请按照[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)的文档安装缺失的字体
+- 如果想第一时间得到反馈，请进作者的插件反馈群（QQ群）：460973561
+
+## 🌟 支持
+
+- Star 这个项目！（右上角的星星）
+
+## 📜 开源协议
+
+本项目采用 [MIT License](LICENSE)
