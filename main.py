@@ -51,21 +51,22 @@ class MemePlugin(Star):
             asyncio.create_task(check_resources())
 
     @filter.command("meme帮助", alias={"表情帮助"})
-    async def meme_keywords_show(self, event: AstrMessageEvent):
+    async def memes_help(self, event: AstrMessageEvent):
         "查看有哪些关键词可以触发meme"
         image_path = Path(__file__).parent / "memes_help.jpg"
         yield event.image_result(str(image_path))
 
     @filter.command("meme详情", alias={"表情详情"})
     async def meme_details_show(
-        self, event: AstrMessageEvent, keyword: str | None = None
+        self, event: AstrMessageEvent, keyword: str| int | None = None
     ):
         "查看指定meme需要的参数"
         if not keyword:
             yield event.plain_result("未指定要查看的meme")
             return
+        keyword = str(keyword)
         target_keyword = next(
-            (k for k in meme_keywords_set if k in event.get_message_str()), None
+            (k for k in meme_keywords_set if k == keyword), None
         )
         if target_keyword is None:
             yield event.plain_result("未支持的meme关键词")
