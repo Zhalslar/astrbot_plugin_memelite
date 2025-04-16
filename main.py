@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import aiohttp
 from meme_generator import Meme, get_memes
@@ -33,7 +32,7 @@ meme_keywords_set = set(meme_keywords_list)  # 无序集合
     "Zhalslar",
     "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
     "1.0.8",
-    "https://github.com/Zhalslar/astrbot_plugin_memelite"
+    "https://github.com/Zhalslar/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -75,17 +74,31 @@ class MemePlugin(Star):
         if not meme:
             yield event.plain_result("未找到相关meme")
             return
-        meme_info = (
-            f"名称：{meme.key}\n"
-            f"别名：{meme.keywords}\n"
-            f"最小图片数：{meme.params_type.min_images}\n"
-            f"最大图片数：{meme.params_type.max_images}\n"
-            f"最小文本数：{meme.params_type.min_texts}\n"
-            f"最大文本数：{meme.params_type.max_texts}\n"
-            f"默认文本：{meme.params_type.default_texts}\n"
-            f"标签：{list(meme.tags)}\n"
-            f"预览图片：\n"
-        )
+
+        meme_info = ""
+        if meme.key:
+            meme_info += f"名称：{meme.key}\n"
+        if meme.keywords:
+            meme_info += f"别名：{meme.keywords}\n"
+
+        # 图片数量
+        if meme.params_type.max_images > 0:
+            if meme.params_type.min_images == meme.params_type.max_images:
+                meme_info += f"所需图片：{meme.params_type.min_images}张\n"
+            elif meme.params_type.min_images > 0:
+                meme_info += f"所需图片：{meme.params_type.min_images}~{meme.params_type.max_images}张\n"
+
+        # 文本数量
+        if meme.params_type.max_texts > 0:
+            if meme.params_type.min_texts == meme.params_type.max_texts:
+                meme_info += f"所需文本：{meme.params_type.min_texts}段\n"
+            elif meme.params_type.min_texts > 0:
+                meme_info += f"所需文本：{meme.params_type.min_texts}~{meme.params_type.max_texts}段\n"
+
+        if meme.params_type.default_texts:
+            meme_info += f"默认文本：{meme.params_type.default_texts}\n"
+        if meme.tags:
+            meme_info += f"标签：{list(meme.tags)}\n"
 
         preview: bytes = meme.generate_preview().getvalue()
         chain = [
@@ -106,13 +119,14 @@ class MemePlugin(Star):
         - 自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数。
         """
         message_str = event.get_message_str()
-        if not message_str:  # 过滤非文本消息
+        if not message_str or "详情" in message_str:
             return
         message_list = message_str.split()
-        first_arg = message_list[0]
 
         if self.prefix:  # 前缀模式
-            if self.prefix not in first_arg:
+            if message_list[0].startswith(self.prefix):
+                message_list[0] = message_list[0][len(self.prefix):]
+            else:
                 return
 
         if self.fuzzy_match:
