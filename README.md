@@ -2,7 +2,6 @@
 
 ![:name](https://count.getloli.com/@astrbot_plugin_memelite?name=astrbot_plugin_memelite&theme=minecraft&padding=6&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
 
-
 # astrbot_plugin_memelite
 
 _✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨_  
@@ -117,6 +116,14 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 ## 🌟 支持
 
 - Star 这个项目！（右上角的星星）
+
+## 👥 贡献指南
+
+欢迎通过以下方式参与项目：
+
+- 🐛 提交 Issue 报告问题
+- 💡 提出新功能建议
+- 🔧 提交 Pull Request 改进代码
 
 ## 📜 开源协议
 
