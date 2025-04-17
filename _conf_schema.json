@@ -17,16 +17,30 @@
           "hint": "压缩长或宽超过512px的静态生成图，防止大图展示，可防刷屏",
           "default": true
       },
-    "save_temp_image": {
-        "description": "是否保存生成的图片",
-        "type": "bool",
-        "hint": "保存路径：data/plugins/astrbot_plugin_memelite_data",
-      "default": false
-    },
+
    "is_check_resources": {
           "description": "启动时检查资源",
           "type": "bool",
           "hint": "每次启动本插件时，检查一遍meme所需资源，缺失资源会自动下载，确保资源下载完整时可关掉这个选项，关掉可优化启动性能",
           "default": true
-      }
+      },
+    "sort_by_str": {
+        "description": "meme列表排序方式",
+        "type": "string",
+        "hint": "影响查看meme列表时的排序",
+        "options": [
+            "key",
+            "keywords",
+            "keywords_pinyin",
+            "date_created",
+            "date_modified"
+        ],
+        "default": "key"
+    },
+    "memes_disabled_list": {
+        "description": "meme黑名单",
+        "type": "list",
+        "hint": "黑名单里的关键词会被屏蔽而无法触发meme",
+      "default": []
+    }
 }

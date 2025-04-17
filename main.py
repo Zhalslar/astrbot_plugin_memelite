@@ -1,9 +1,21 @@
+import asyncio
 from pathlib import Path
 import aiohttp
-from meme_generator import Meme, get_memes
-from meme_generator.download import check_resources
-from meme_generator.exception import MemeGeneratorException
-from meme_generator.utils import run_sync
+from meme_generator import (
+    DeserializeError,
+    ImageAssetMissing,
+    ImageDecodeError,
+    ImageEncodeError,
+    ImageNumberMismatch,
+    Meme,
+    MemeFeedback,
+    TextNumberMismatch,
+    TextOverLength,
+)
+from meme_generator import get_memes
+from meme_generator import Image as MemeImage
+from meme_generator.resources import check_resources_in_background
+#from meme_generator.tools import MemeProperties, MemeSortBy, render_meme_list
 
 from astrbot import logger
 from astrbot.api.event import filter
@@ -11,20 +23,12 @@ from astrbot.api.star import Context, Star, register
 from astrbot.core import AstrBotConfig
 from astrbot.core.platform import AstrMessageEvent
 
-import asyncio
 import io
-from typing import List, Any
+from typing import List, Union
 from PIL import Image
 
 import astrbot.core.message.components as Comp
 from astrbot.core.star.filter.event_message_type import EventMessageType
-
-
-memes: list[Meme] = get_memes()
-meme_keywords_list = [
-    keyword.lower() for meme in memes for keyword in meme.keywords
-]  # 有序列表
-meme_keywords_set = set(meme_keywords_list)  # 无序集合
 
 
 @register(
@@ -37,18 +41,25 @@ meme_keywords_set = set(meme_keywords_list)  # 无序集合
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
-        self.memes: list[Meme] = memes
-        self.meme_keywords_list: list = meme_keywords_list
+        self.memes_disabled_list: list[str] = config.get("ban_memes", [])
+        self.sort_by_str: str = config.get("ban_memes", "key")
+        self.memes: list[Meme] = get_memes()
+        self.meme_keywords: list[str] = [
+            keyword for meme in self.memes for keyword in meme.info.keywords
+        ]
+        self.meme_keywords_list = [
+            keyword for keyword in self.meme_keywords if keyword not in self.memes_disabled_list
+        ]
+        self.meme_keywords_set = set(self.meme_keywords_list)
 
         self.prefix: str = config.get("prefix", "")
         self.fuzzy_match: int = config.get("fuzzy_match", True)
         self.is_compress_image: bool = config.get("is_compress_image", True)
-        self.save_temp_image: bool = config.get("save_temp_image", False)
 
         self.is_check_resources: bool = config.get("is_check_resources", True)
         if self.is_check_resources:
             logger.info("正在检查memes资源文件...")
-            asyncio.create_task(check_resources())
+            check_resources_in_background()
 
     @filter.command("meme帮助", alias={"表情帮助"})
     async def memes_help(self, event: AstrMessageEvent):
@@ -58,50 +69,64 @@ class MemePlugin(Star):
 
     @filter.command("meme详情", alias={"表情详情"})
     async def meme_details_show(
-        self, event: AstrMessageEvent, keyword: str| int | None = None
+        self, event: AstrMessageEvent, keyword: str | int | None = None
     ):
         "查看指定meme需要的参数"
         if not keyword:
             yield event.plain_result("未指定要查看的meme")
             return
         keyword = str(keyword)
-        target_keyword = next(
-            (k for k in meme_keywords_set if k == keyword), None
-        )
+        target_keyword = next((k for k in self.meme_keywords_set if k == keyword), None)
         if target_keyword is None:
             yield event.plain_result("未支持的meme关键词")
             return
-        meme: Meme | None = self._find_meme(target_keyword)
+
+        # 匹配meme
+        meme = self._find_meme(keyword)
         if not meme:
             yield event.plain_result("未找到相关meme")
             return
 
+        # 提取meme的所有参数
+        name = meme.key
+        info = meme.info
+        params = info.params
+        keywords = info.keywords
+        min_images = params.min_images
+        max_images = params.max_images
+        min_texts = params.min_texts
+        max_texts = params.max_texts
+        default_texts = params.default_texts
+        tags = info.tags
+
         meme_info = ""
-        if meme.key:
-            meme_info += f"名称：{meme.key}\n"
-        if meme.keywords:
-            meme_info += f"别名：{meme.keywords}\n"
+        if name:
+            meme_info += f"名称：{name}\n"
 
-        # 图片数量
-        if meme.params_type.max_images > 0:
-            if meme.params_type.min_images == meme.params_type.max_images:
-                meme_info += f"所需图片：{meme.params_type.min_images}张\n"
-            elif meme.params_type.min_images > 0:
-                meme_info += f"所需图片：{meme.params_type.min_images}~{meme.params_type.max_images}张\n"
+        if keywords:
+            meme_info += f"别名：{keywords}\n"
 
-        # 文本数量
-        if meme.params_type.max_texts > 0:
-            if meme.params_type.min_texts == meme.params_type.max_texts:
-                meme_info += f"所需文本：{meme.params_type.min_texts}段\n"
-            elif meme.params_type.min_texts > 0:
-                meme_info += f"所需文本：{meme.params_type.min_texts}~{meme.params_type.max_texts}段\n"
+        if max_images > 0:
+            meme_info += (
+                f"所需图片：{min_images}张\n"
+                if min_images == max_images
+                else f"所需图片：{min_images}~{max_images}张\n"
+            )
 
-        if meme.params_type.default_texts:
-            meme_info += f"默认文本：{meme.params_type.default_texts}\n"
-        if meme.tags:
-            meme_info += f"标签：{list(meme.tags)}\n"
+        if max_texts > 0:
+            meme_info += (
+                f"所需文本：{min_texts}段\n"
+                if min_texts == max_texts
+                else f"所需文本：{min_texts}~{max_texts}段\n"
+            )
 
-        preview: bytes = meme.generate_preview().getvalue()
+        if default_texts:
+            meme_info += f"默认文本：{default_texts}\n"
+
+        if tags:
+            meme_info += f"标签：{list(tags)}\n"
+
+        preview: bytes = meme.generate_preview()  # type: ignore
         chain = [
             Comp.Plain(meme_info),
             Comp.Image.fromBytes(preview),
@@ -111,7 +136,7 @@ class MemePlugin(Star):
     @filter.event_message_type(EventMessageType.ALL)
     async def meme_handle(self, event: AstrMessageEvent):
         """
-        处理 meme 生成的核心逻辑。
+        处理 meme 生成的主流程。
 
         功能描述：
         - 支持匹配所有 meme 关键词。
@@ -124,33 +149,63 @@ class MemePlugin(Star):
             return
         message_list = message_str.split()
 
-        if self.prefix:  # 前缀模式
+        # 前缀模式
+        if self.prefix:
             if message_list[0].startswith(self.prefix):
-                message_list[0] = message_list[0][len(self.prefix):]
+                message_list[0] = message_list[0][len(self.prefix) :]
             else:
                 return
 
-        if self.fuzzy_match:
-            keyword = next(
-                (k for k in meme_keywords_set if k in message_str), None
-            )  # 模糊匹配模式
-        else:
-            keyword = next(
-                (k for k in meme_keywords_set if k in message_list), None
-            )  # 精准匹配模式
+        # 精准/模糊匹配
+        keyword = next(
+            (
+                k
+                for k in self.meme_keywords_set
+                if k in (message_str if self.fuzzy_match else message_list)
+            ),
+            None,
+        )
         if not keyword:
             return
 
-        images: List[bytes] = []
-        texts: List[str] = []
-        args: dict[str, Any] = {}
-
-        meme: Meme | None = self._find_meme(keyword)
-        if meme is None:
+        # 匹配meme
+        meme = self._find_meme(keyword)
+        if not meme:
+            yield event.plain_result("未找到相关meme")
             return
-        max_images: int = meme.params_type.max_images
-        max_texts: int = meme.params_type.max_texts
-        default_texts: list[str] = meme.params_type.default_texts
+
+        # 收集参数
+        meme_images, texts, options = await self._get_parms(event, keyword, meme)
+
+        # 合成表情
+        image: bytes = await self._meme_generate(meme, meme_images, texts, options)
+
+        # 压缩图片
+        if self.is_compress_image and Image.open(io.BytesIO(image)).format != "GIF":
+            image = self.compress_image(image)  # type: ignore
+            if image is None:
+                yield event.plain_result("图片压缩失败")
+                return
+        # 发送图片
+        chain = [Comp.Image.fromBytes(image)]
+        yield event.chain_result(chain)  # type: ignore
+
+    def _find_meme(self, keyword: str) -> Meme | None:
+        """根据关键词寻找meme"""
+        for meme in self.memes:
+            if keyword == meme.key or any(k == keyword for k in meme.info.keywords):
+                return meme
+
+    async def _get_parms(self, event: AstrMessageEvent, keyword: str, meme: Meme):
+        """收集参数"""
+        meme_images: list[MemeImage] = []
+        texts: List[str] = []
+        options: dict[str, Union[bool, str, int, float]] = {}
+
+        params = meme.info.params
+        max_images = params.max_images
+        max_texts = params.max_texts
+        default_texts = params.default_texts
 
         messages = event.get_messages()
         send_id = event.get_sender_id()
@@ -165,14 +220,14 @@ class MemePlugin(Star):
             if isinstance(_seg, Comp.Image):
                 if img_url := _seg.url:
                     if msg_image := await self.download_image(img_url):
-                        images.append(msg_image)
+                        meme_images.append(MemeImage(f"{sender_name}_", msg_image))
 
             elif isinstance(_seg, Comp.At):
                 seg_qq = str(_seg.qq)
                 if str(seg_qq) != self_id:
                     target_ids.append(seg_qq)
                     at_avatar = await self.get_avatar(str(seg_qq))
-                    images.append(at_avatar)
+                    meme_images.append(MemeImage(str(seg_qq), at_avatar))
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
@@ -201,18 +256,17 @@ class MemePlugin(Star):
             client = event.bot
             target_id = target_ids[0]  # 默认取用第一个用户
             user_info = await client.get_stranger_info(user_id=int(target_id))
-            target_name = user_info.get("nickname")
-            gender = user_info.get("sex")
-            args["user_infos"] = [{"name": target_name, "gender": gender}]
+            options["name"] = user_info.get("nickname")
+            options["gender"] = user_info.get("sex")
 
         # 确保图片数量在min_images到max_images之间
-        if len(images) < max_images and send_id:
+        if len(meme_images) < max_images and send_id:
             use_avatar = await self.get_avatar(send_id)
-            images.insert(0, use_avatar)
-        if len(images) < max_images and self_id:
+            meme_images.insert(0, MemeImage(sender_name, use_avatar))
+        if len(meme_images) < max_images and self_id:
             bot_avatar = await self.get_avatar(self_id)
-            images.append(bot_avatar)
-        images = images[:max_images]
+            meme_images.append(MemeImage("我", bot_avatar))
+        meme_images = meme_images[:max_images]
 
         # 确保文本数量在min_texts到max_texts之间
         if len(texts) < max_texts and target_name:
@@ -221,46 +275,66 @@ class MemePlugin(Star):
             texts.extend(default_texts[: max_texts - len(texts)])
         texts = texts[:max_texts]
 
-        try:
-            image_io = await run_sync(meme)(images=images, texts=texts, args=args)
-
-        except MemeGeneratorException as e:
-            logger.error(e.message)
-            return
-        if self.is_compress_image and Image.open(image_io).format != "GIF":
-            image_io = self.compress_image(image_io)
-            if image_io is None:
-                yield event.plain_result("图片压缩失败")
-                return
-        image_bytes = image_io.getvalue()
-        chain = [Comp.Image.fromBytes(image_bytes)]
-        yield event.chain_result(chain)  # type: ignore
-
-    def _find_meme(self, meme_name: str) -> Meme | None:
-        """根据给定的meme名字查找并返回符合条件的第一个表情包对象"""
-        search_name = meme_name.lower()
-        for meme in self.memes:
-            # 检查meme的关键字和别名是否包含目标名称
-            if search_name == meme.key.lower() or any(
-                keyword.lower() == search_name for keyword in meme.keywords
-            ):
-                return meme
-        return None
+        return meme_images, texts, options
 
     @staticmethod
-    def compress_image(image_io, max_size: int = 512) -> io.BytesIO | None:
-        """压缩图片到max_size大小，gif不处理"""
+    async def _meme_generate(
+        meme: Meme, meme_images: list[MemeImage], texts: list[str], options
+    ) -> bytes:
+        """向meme生成器发出请求，返回生成的图片"""
+
+        # 将同步函数运行在默认的线程池中
+        result = await asyncio.to_thread(meme.generate, meme_images, texts, options)
+
+        if result is None:
+            logger.error("返回内容为空")
+        elif isinstance(result, ImageDecodeError):
+            logger.error(f"图片解码出错：{result.error}")
+        elif isinstance(result, ImageEncodeError):
+            logger.error(f"图片编码出错：{result.error}")
+        elif isinstance(result, ImageAssetMissing):
+            logger.error(f"缺少图片资源：{result.path}")
+        elif isinstance(result, DeserializeError):
+            logger.error(f"表情选项解析出错：{result.error}")
+        elif isinstance(result, ImageNumberMismatch):
+            num = (
+                f"{result.min} ~ {result.max}"
+                if result.min != result.max
+                else str(result.min)
+            )
+            logger.error(f"图片数量不符，应为 {num}，实际传入 {result.actual}")
+        elif isinstance(result, TextNumberMismatch):
+            num = (
+                f"{result.min} ~ {result.max}"
+                if result.min != result.max
+                else str(result.min)
+            )
+            logger.error(f"文字数量不符，应为 {num}，实际传入 {result.actual}")
+        elif isinstance(result, TextOverLength):
+            text = result.text
+            repr = text if len(text) <= 10 else (text[:10] + "...")
+            logger.error(f"文字过长：{repr}")
+        elif isinstance(result, MemeFeedback):
+            logger.error(result.feedback)
+
+        if not isinstance(result, bytes):
+            raise NotImplementedError
+
+        return result
+
+    @staticmethod
+    def compress_image(image: bytes, max_size: int = 512) -> bytes | None:
+        """压缩静态图片到max_size大小"""
         try:
-            img = Image.open(image_io)
+            img = Image.open(io.BytesIO(image))
             if img.format == "GIF":
-                return
+                return None
             if img.width > max_size or img.height > max_size:
                 img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
 
-            output_buffer = io.BytesIO()
-            img.save(output_buffer, format=img.format)
-            output_buffer.seek(0)
-            return output_buffer
+                output = io.BytesIO()
+                img.save(output, format=img.format)
+                return output.getvalue()
 
         except Exception as e:
             raise ValueError(f"图片压缩失败: {e}")
