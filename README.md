@@ -107,10 +107,7 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ## 📌 注意事项
 
-- 一些会引起不适的meme（如'射','撅'）需要自己去添加：[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib-rs),
-  将meme-generator仓库中memes文件夹里的文件 添加到 astrbot虚拟环境目录下的meme_generator/memes文件夹里（如果你不会，建议放弃，没有水平就别搞），然后重启astrbot即可。
-- 如果遇到中文字体显示为乱码，请按照[表情包生成器 meme-generator](https://github.com/MemeCrafters/meme-generator-rs)的文档安装缺失的字体
-- 本插件已换用meme-generator的rust重构版，旧版用户更新需重新下载资源
+- 本插件已换用meme-generator的rust重构版，旧版用户更新需重新下载资源。
 - 如果想第一时间得到反馈，请进作者的插件反馈群（QQ群）：460973561
 
 ## 👥 贡献指南
@@ -119,3 +116,28 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 - 🐛 提交 Issue 报告问题
 - 💡 提出新功能建议
 - 🔧 提交 Pull Request 改进代码
+
+## 🐍 额外表情（如'射','撅'）
+
+### 第一步，下载动态链接库。  
+
+前往[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions/runs/14427231740) 往下滑找到动态链接库（即.so后缀文件），根据你的环境选择对应版本，如图：
+![tmp7FDD](https://github.com/user-attachments/assets/6be80549-ccb3-45c1-8615-7e065469f5bb)
+
+### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下。
+
+![tmpF004](https://github.com/user-attachments/assets/de3b5f62-da85-4307-b027-ac5c5971d525)
+
+### 第三步，在 配置文件 将 load_external_memes 设置为 true。
+
+参考https://github.com/MemeCrafters/meme-generator-rs/wiki/%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6
+
+### 第四步，下载图片/字体资源并放置于 $MEME_HOME/resources 文件夹下
+
+下载仓库源码：https://github.com/MemeCrafters/meme-generator-contrib-rs
+将资源拖进 $MEME_HOME/resources 文件夹下
+![tmpF528](https://github.com/user-attachments/assets/32124691-b960-48c6-8d88-d17d2834a057)
+
+### 第五步，重启astrbot。
+
+
