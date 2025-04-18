@@ -125,13 +125,16 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 ![tmp7FDD](https://github.com/user-attachments/assets/6be80549-ccb3-45c1-8615-7e065469f5bb)
 
 ### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下（libraries文件夹若不存在则新建一个）。
-![tmp697](https://github.com/user-attachments/assets/34cd6dcb-13c9-49c0-a1de-fda442ccb25f)
 
+$MEME_HOME指的是哪里的路径？请看：
 ![tmpF004](https://github.com/user-attachments/assets/de3b5f62-da85-4307-b027-ac5c5971d525)
+
+windows和Linux的示例路径：
+![tmp697](https://github.com/user-attachments/assets/34cd6dcb-13c9-49c0-a1de-fda442ccb25f)
 
 ### 第三步，在 配置文件 将 load_external_memes 设置为 true。
 
-打开config.toml文件，将下面的内容复制粘贴进去即可
+打开config.toml文件，将下面的内容复制粘贴进去即可（当然其他配置你也可以根据个人喜好更改）
 
 ```plaintext
 [meme]
@@ -161,10 +164,9 @@ port = 2233  # web server 端口
 ```
 
 ### 第四步，下载图片/字体资源并放置于 $MEME_HOME/resources 文件夹下
+如图在Linux下的示例操作：
+![tmp6EA4](https://github.com/user-attachments/assets/e141c05b-8996-451a-b85d-55b1e7891ccb)
 
-下载仓库源码：https://github.com/MemeCrafters/meme-generator-contrib-rs
-将资源拖进 $MEME_HOME/resources 文件夹下
-![tmpF528](https://github.com/user-attachments/assets/32124691-b960-48c6-8d88-d17d2834a057)
 
 ### 第五步，重启astrbot。
 
