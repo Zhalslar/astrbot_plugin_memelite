@@ -181,11 +181,12 @@ class MemePlugin(Star):
         image: bytes = await self._meme_generate(meme, meme_images, texts, options)
 
         # 压缩图片
-        if self.is_compress_image and Image.open(io.BytesIO(image)).format != "GIF":
-            image = self.compress_image(image)  # type: ignore
-            if image is None:
-                yield event.plain_result("图片压缩失败")
-                return
+        if self.is_compress_image:
+            try:
+                image = self.compress_image(image) or image
+            except:  # noqa: E722
+                pass
+
         # 发送图片
         chain = [Comp.Image.fromBytes(image)]
         yield event.chain_result(chain)  # type: ignore
