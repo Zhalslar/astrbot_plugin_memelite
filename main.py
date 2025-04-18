@@ -7,12 +7,11 @@ from meme_generator import (
     ImageDecodeError,
     ImageEncodeError,
     ImageNumberMismatch,
-    Meme,
     MemeFeedback,
     TextNumberMismatch,
     TextOverLength,
 )
-from meme_generator import get_memes
+from meme_generator import Meme, get_memes
 from meme_generator import Image as MemeImage
 from meme_generator.resources import check_resources_in_background
 #from meme_generator.tools import MemeProperties, MemeSortBy, render_meme_list
