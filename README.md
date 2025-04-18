@@ -117,20 +117,48 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 - 💡 提出新功能建议
 - 🔧 提交 Pull Request 改进代码
 
-## 🐍 额外表情（如'射','撅'）
+## 🐍 额外表情安装教程（如'射','撅'）
 
 ### 第一步，下载动态链接库。  
 
-前往[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions/runs/14427231740) 往下滑找到动态链接库（即.so后缀文件），根据你的环境选择对应版本，如图：
+前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions/runs/14427231740) 往下滑找到动态链接库（即.so后缀文件），根据你的环境选择对应版本，如图：
 ![tmp7FDD](https://github.com/user-attachments/assets/6be80549-ccb3-45c1-8615-7e065469f5bb)
 
-### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下。
+### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下（libraries文件夹若不存在则新建一个）。
+![tmp697](https://github.com/user-attachments/assets/34cd6dcb-13c9-49c0-a1de-fda442ccb25f)
 
 ![tmpF004](https://github.com/user-attachments/assets/de3b5f62-da85-4307-b027-ac5c5971d525)
 
 ### 第三步，在 配置文件 将 load_external_memes 设置为 true。
 
-参考https://github.com/MemeCrafters/meme-generator-rs/wiki/%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6
+打开config.toml文件，将下面的内容复制粘贴进去即可
+
+```plaintext
+[meme]
+load_builtin_memes = true  # 是否加载内置表情包
+load_external_memes = true  # 是否加载外部表情包
+meme_disabled_list = []  # 禁用的表情包列表，填写表情的 `key`
+
+[resource]
+resource_url = "https://cdn.jsdelivr.net/gh/MemeCrafters/meme-generator-rs@"  # 下载内置表情包图片/字体时的资源链接
+download_fonts = true  # 是否下载字体
+
+[font]
+use_local_fonts = true  # 是否使用本地文件夹下的字体
+default_font_families = ["Noto Sans SC", "Noto Color Emoji"]  # 默认字体
+
+[encoder]
+gif_max_frames = 200  # 限制生成的 gif 帧数
+gif_encode_speed = 29  # gif 编码速度，范围为 1 ~ 30，数字越大，编码速度越快，但图片质量越差
+
+[api]
+baidu_trans_appid = ""  # 百度翻译api相关，部分表情需要使用
+baidu_trans_apikey = ""  # 可在 百度翻译开放平台 (http://api.fanyi.baidu.com) 申请
+
+[server]
+host = "0.0.0.0"  # web server 监听地址
+port = 2233  # web server 端口
+```
 
 ### 第四步，下载图片/字体资源并放置于 $MEME_HOME/resources 文件夹下
 
