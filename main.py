@@ -203,31 +203,37 @@ class MemePlugin(Star):
         options: dict[str, Union[bool, str, int, float]] = {}
 
         params = meme.info.params
-        max_images = params.max_images
-        max_texts = params.max_texts
-        default_texts = params.default_texts
+        max_images: int = params.max_images
+        max_texts: int = params.max_texts
+        default_texts: list[str] = params.default_texts
 
         messages = event.get_messages()
-        send_id = event.get_sender_id()
-        self_id = event.get_self_id()
-        sender_name = event.get_sender_name()
+        send_id: str = event.get_sender_id()
+        self_id: str = event.get_self_id()
+        sender_name: str = event.get_sender_name()
 
-        target_ids: list = []
-        target_name: str = sender_name
+        target_ids: list[str] = []
+        target_names: list[str] = []
 
-        async def _process_segment(_seg):
-            """Process a single message segment."""
+        async def _process_segment(_seg, name):
+            """从消息段中获取参数"""
             if isinstance(_seg, Comp.Image):
                 if img_url := _seg.url:
                     if msg_image := await self.download_image(img_url):
-                        meme_images.append(MemeImage(f"{sender_name}_", msg_image))
+                        meme_images.append(MemeImage(name, msg_image))
 
             elif isinstance(_seg, Comp.At):
                 seg_qq = str(_seg.qq)
-                if str(seg_qq) != self_id:
+                if seg_qq != self_id:
                     target_ids.append(seg_qq)
-                    at_avatar = await self.get_avatar(str(seg_qq))
-                    meme_images.append(MemeImage(str(seg_qq), at_avatar))
+                    at_avatar = await self.get_avatar(seg_qq)
+                    # 从消息平台获取At者的额外参数
+                    if (result := await self._get_extra(event, target_id=seg_qq)):
+                        nickname, sex = result
+                        options["name"], options["gender"] = nickname, sex
+                        target_names.append(nickname)
+                        meme_images.append(MemeImage(nickname, at_avatar))
+
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
@@ -238,41 +244,34 @@ class MemePlugin(Star):
         reply_seg = next((seg for seg in messages if isinstance(seg, Comp.Reply)), None)
         if reply_seg and reply_seg.chain:
             for seg in reply_seg.chain:
-                await _process_segment(seg)
+                await _process_segment(seg, "这家伙")
 
         # 遍历原始消息段落
         for seg in messages:
-            await _process_segment(seg)
+            await _process_segment(seg, sender_name)
 
-        target_ids.append(send_id)
+        # 从消息平台获取发送者的额外参数
+        if not target_ids:
+            if (result := await self._get_extra(event, target_id=send_id)):
+                nickname, sex = result
+                options["name"], options["gender"] = nickname, sex
+                target_names.append(nickname)
 
-        # aiocqhttp消息平台可调用Onebot接口“get_stranger_info”获取额外参数
-        if event.get_platform_name() == "aiocqhttp":
-            from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
-                AiocqhttpMessageEvent,
-            )
-
-            assert isinstance(event, AiocqhttpMessageEvent)
-            client = event.bot
-            target_id = target_ids[0]  # 默认取用第一个用户
-            user_info = await client.get_stranger_info(user_id=int(target_id))
-            options["name"] = user_info.get("nickname")
-            options["gender"] = user_info.get("sex")
+        if not target_names:
+            target_names.append(sender_name)
 
         # 确保图片数量在min_images到max_images之间
-        if len(meme_images) < max_images and send_id:
+        if len(meme_images) < max_images:
             use_avatar = await self.get_avatar(send_id)
             meme_images.insert(0, MemeImage(sender_name, use_avatar))
-        if len(meme_images) < max_images and self_id:
+        if len(meme_images) < max_images:
             bot_avatar = await self.get_avatar(self_id)
             meme_images.append(MemeImage("我", bot_avatar))
         meme_images = meme_images[:max_images]
 
         # 确保文本数量在min_texts到max_texts之间
-        if len(texts) < max_texts and target_name:
-            texts.append(target_name)
-        if len(texts) < max_texts and default_texts:
-            texts.extend(default_texts[: max_texts - len(texts)])
+        texts.extend(target_names)
+        texts.extend(default_texts)
         texts = texts[:max_texts]
 
         return meme_images, texts, options
@@ -323,6 +322,19 @@ class MemePlugin(Star):
         return result
 
     @staticmethod
+    async def _get_extra(event: AstrMessageEvent, target_id: str):
+        """从消息平台获取参数"""
+        if event.get_platform_name() == "aiocqhttp":
+            from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
+            assert isinstance(event, AiocqhttpMessageEvent)
+            client = event.bot
+            user_info = await client.get_stranger_info(user_id=int(target_id))
+            nickname = user_info.get("nickname")
+            sex = user_info.get("sex")
+            return nickname, sex
+        # TODO 适配更多消息平台
+
+    @staticmethod
     def compress_image(image: bytes, max_size: int = 512) -> bytes | None:
         """压缩静态图片到max_size大小"""
         try:
@@ -341,6 +353,7 @@ class MemePlugin(Star):
 
     @staticmethod
     async def download_image(url: str) -> bytes | None:
+        """下载图片"""
         url = url.replace("https://", "http://")
         try:
             async with aiohttp.ClientSession() as client:
