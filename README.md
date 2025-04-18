@@ -126,8 +126,15 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下（libraries文件夹若不存在则新建一个）。
 
-$MEME_HOME指的是哪里的路径？请看：
-![tmpF004](https://github.com/user-attachments/assets/de3b5f62-da85-4307-b027-ac5c5971d525)
+$MEME_HOME 默认位置为 $HOME/.meme_generator
+
+不同系统下的 $HOME 目录为：
+
+    Linux: /home/<username>
+    MacOS: /Users/<username>
+    Windows: C:\Users\<username>
+
+配置文件、表情制作所需的图片和字体、外部表情动态链接库均放置于 $MEME_HOME 文件夹下
 
 windows和Linux的示例路径：
 ![tmp697](https://github.com/user-attachments/assets/34cd6dcb-13c9-49c0-a1de-fda442ccb25f)
@@ -164,9 +171,10 @@ port = 2233  # web server 端口
 ```
 
 ### 第四步，下载图片/字体资源并放置于 $MEME_HOME/resources 文件夹下
-如图在Linux下的示例操作：
-![tmp6EA4](https://github.com/user-attachments/assets/e141c05b-8996-451a-b85d-55b1e7891ccb)
 
+如图在Linux下的示例操作：
+
+![tmp6EA4](https://github.com/user-attachments/assets/e141c05b-8996-451a-b85d-55b1e7891ccb)
 
 ### 第五步，重启astrbot。
 
