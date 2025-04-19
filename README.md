@@ -121,8 +121,9 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ### 第一步，下载动态链接库。  
 
-前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions/runs/14427231740) 往下滑找到动态链接库（即.so后缀文件），根据你的环境选择对应版本，如图：
-![tmp7FDD](https://github.com/user-attachments/assets/6be80549-ccb3-45c1-8615-7e065469f5bb)
+前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions) 往下滑找到动态链接库（即.so后缀文件），根据你的环境选择对应版本，如图示例：
+![tmp1CF8](https://github.com/user-attachments/assets/fbb39f01-8a25-4602-90a1-629876cc13e8)
+
 
 ### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下（libraries文件夹若不存在则新建一个）。
 
