@@ -119,6 +119,8 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ## 🐍 额外表情安装教程（如'射','撅'）
 
+> 已经写得很详细了，还是不会的话建议放弃
+
 ### 第一步，下载动态链接库。  
 
 前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions) 往下滑找到动态链接库，根据你的环境选择对应版本，如图示例：
