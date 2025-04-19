@@ -121,9 +121,9 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ### 第一步，下载动态链接库。  
 
-前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions) 往下滑找到动态链接库（即.so后缀文件），根据你的环境选择对应版本，如图示例：
+前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions) 往下滑找到动态链接库，根据你的环境选择对应版本，如图示例：
 ![tmp1CF8](https://github.com/user-attachments/assets/fbb39f01-8a25-4602-90a1-629876cc13e8)
-
+下载完后解压得到的.so后缀文件，这个文件就是所需的动态链接库。
 
 ### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下（libraries文件夹若不存在则新建一个）。
 
@@ -135,7 +135,6 @@ $MEME_HOME 默认位置为 $HOME/.meme_generator
     MacOS: /Users/<username>
     Windows: C:\Users\<username>
 
-配置文件、表情制作所需的图片和字体、外部表情动态链接库均放置于 $MEME_HOME 文件夹下
 
 windows和Linux的示例路径：
 ![tmp697](https://github.com/user-attachments/assets/34cd6dcb-13c9-49c0-a1de-fda442ccb25f)
