@@ -136,8 +136,9 @@ $MEME_HOME 默认位置为 $HOME/.meme_generator
     Windows: C:\Users\<username>
 
 
-windows和Linux的示例路径：
-![tmp697](https://github.com/user-attachments/assets/34cd6dcb-13c9-49c0-a1de-fda442ccb25f)
+Linux和windows的示例路径：
+![tmp41F5](https://github.com/user-attachments/assets/ffbcb3d5-d971-409f-ba2e-86db76a6a9d6)
+
 
 ### 第三步，在 配置文件 将 load_external_memes 设置为 true。
 
