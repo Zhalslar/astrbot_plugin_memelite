@@ -122,3 +122,12 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 - 🐛 提交 Issue 报告问题
 - 💡 提出新功能建议
 - 🔧 提交 Pull Request 改进代码
+
+## 🔗 相关链接
+
+- [meme-generator](https://github.com/MemeCrafters/meme-generator-contrib-rs) 表情包生成器
+- [meme-generator的rust重构版](https://github.com/MemeCrafters/meme-generator-contrib-rs) 表情包生成器的rust重构版
+- [meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib)
+- [meme-generator-rs 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib-rs)
+- [nonebot-plugin-memes](https://github.com/MemeCrafters/nonebot-plugin-memes) 表情包生成器 meme-generator 的 Nonebot2 对接插件
+- [Astrbot](https://astrbot.app/) 易于上手的多平台聊天机器人及开发框架。
