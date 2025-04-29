@@ -65,6 +65,9 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 | /meme帮助      | 查看所有能触发meme合成的关键词  |
 | /meme详情 xxx  | 具体查看某个meme的参数         |
 |   {关键词}     |   触发meme合成            |
+|   禁用meme xxx    |   禁用指定meme           |
+|   启用meme xxx    |   启用指定meme           |
+|   meme黑名单     |   查看哪些meme被禁用了        |
 
 , 关键词包括：
 
