@@ -110,7 +110,7 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ## 📌 注意事项
 
-- 本插件已换用meme-generator的rust重构版，旧版用户更新需重新下载资源。
+- 如果遇到中文字体显示为乱码，请按照[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)的文档安装缺失的字体
 - 如果想第一时间得到反馈，请进作者的插件反馈群（QQ群）：460973561
 
 ## 👥 贡献指南
@@ -120,75 +120,10 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 - 💡 提出新功能建议
 - 🔧 提交 Pull Request 改进代码
 
-## 🐍 额外表情安装教程（如'射','撅'）
+## 🐍 安装额外表情（如'射','撅'）
 
-> 步骤繁琐，没有需要的话就别装。
-
-> 实在想装的话就好好看文档，别来烦作者。
-
-> 实在想找作者的话，先点个star再说，没点的不给予理会。
-
-> 已经写得很详细了，还是不会的话建议放弃。
-
-### 第一步，下载动态链接库。  
-
-前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions) 往下滑找到动态链接库，根据你的环境选择对应版本，如图示例：
-![tmp1CF8](https://github.com/user-attachments/assets/fbb39f01-8a25-4602-90a1-629876cc13e8)
-下载完后解压得到的.so后缀文件，这个文件就是所需的动态链接库。
-
-### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下（libraries文件夹若不存在则新建一个）。
-
-$MEME_HOME 默认位置为 $HOME/.meme_generator
-
-不同系统下的 $HOME 目录为：
-
-    Linux: /home/<username>
-    MacOS: /Users/<username>
-    Windows: C:\Users\<username>
-
-
-Linux和windows的示例路径：
-![tmp41F5](https://github.com/user-attachments/assets/ffbcb3d5-d971-409f-ba2e-86db76a6a9d6)
-
-
-### 第三步，在 配置文件 将 load_external_memes 设置为 true。
-
-打开config.toml文件，将下面的内容复制粘贴进去即可（当然其他配置你也可以根据个人喜好更改）
-
-```plaintext
-[meme]
-load_builtin_memes = true  # 是否加载内置表情包
-load_external_memes = true  # 是否加载外部表情包
-meme_disabled_list = []  # 禁用的表情包列表，填写表情的 `key`
-
-[resource]
-resource_url = "https://cdn.jsdelivr.net/gh/MemeCrafters/meme-generator-rs@"  # 下载内置表情包图片/字体时的资源链接
-download_fonts = true  # 是否下载字体
-
-[font]
-use_local_fonts = true  # 是否使用本地文件夹下的字体
-default_font_families = ["Noto Sans SC", "Noto Color Emoji"]  # 默认字体
-
-[encoder]
-gif_max_frames = 200  # 限制生成的 gif 帧数
-gif_encode_speed = 29  # gif 编码速度，范围为 1 ~ 30，数字越大，编码速度越快，但图片质量越差
-
-[api]
-baidu_trans_appid = ""  # 百度翻译api相关，部分表情需要使用
-baidu_trans_apikey = ""  # 可在 百度翻译开放平台 (http://api.fanyi.baidu.com) 申请
-
-[server]
-host = "0.0.0.0"  # web server 监听地址
-port = 2233  # web server 端口
-```
-
-### 第四步，下载图片/字体资源并放置于 $MEME_HOME/resources 文件夹下
-
-如图在Linux下的示例操作：
-
-![tmp6EA4](https://github.com/user-attachments/assets/e141c05b-8996-451a-b85d-55b1e7891ccb)
-
-### 第五步，重启astrbot。
+前往[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib),
+  将meme-generator仓库中memes文件夹里的文件 添加到 astrbot虚拟环境目录下的meme_generator/memes文件夹里（如果你不会，建议放弃，没有水平就别搞），然后重启astrbot即可。
 
 ## 🔗 相关链接
 
