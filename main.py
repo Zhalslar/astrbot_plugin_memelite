@@ -14,7 +14,6 @@ from meme_generator import (
 from meme_generator import Meme, get_memes
 from meme_generator import Image as MemeImage
 from meme_generator.resources import check_resources_in_background
-#from meme_generator.tools import MemeProperties, MemeSortBy, render_meme_list
 
 from astrbot import logger
 from astrbot.api.event import filter
@@ -25,7 +24,6 @@ from astrbot.core.platform import AstrMessageEvent
 import io
 from typing import List, Union
 from PIL import Image
-
 import astrbot.core.message.components as Comp
 from astrbot.core.star.filter.event_message_type import EventMessageType
 
@@ -34,24 +32,19 @@ from astrbot.core.star.filter.event_message_type import EventMessageType
     "astrbot_plugin_memelite",
     "Zhalslar",
     "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
-    "1.0.8",
+    "2.0.4",
     "https://github.com/Zhalslar/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
-        self.memes_disabled_list: list[str] = config.get("ban_memes", [])
-        self.sort_by_str: str = config.get("ban_memes", "key")
+        self.config = config
+        self.memes_disabled_list: list[str] = config.get("memes_disabled_list", [])
+        self.sort_by_str: str = config.get("sort_by_str", "key")
         self.memes: list[Meme] = get_memes()
-        self.meme_keywords: list[str] = [
-            keyword for meme in self.memes for keyword in meme.info.keywords
-        ]
-        self.meme_keywords_list = [
-            keyword for keyword in self.meme_keywords if keyword not in self.memes_disabled_list
-        ]
-        self.meme_keywords_set = set(self.meme_keywords_list)
-
-        self.prefix: str = config.get("prefix", "")
+        self.meme_keywords = [keyword for meme in self.memes for keyword in meme.info.keywords]
+        self.wake_prefix: list[str] =  self.context.get_config().get("wake_prefix", [])
+        self.prefix_mode: bool = config.get("prefix", False)  # 是否启用前缀模式
         self.fuzzy_match: int = config.get("fuzzy_match", True)
         self.is_compress_image: bool = config.get("is_compress_image", True)
 
@@ -75,7 +68,7 @@ class MemePlugin(Star):
             yield event.plain_result("未指定要查看的meme")
             return
         keyword = str(keyword)
-        target_keyword = next((k for k in self.meme_keywords_set if k == keyword), None)
+        target_keyword = next((k for k in self.meme_keywords if k == keyword), None)
         if target_keyword is None:
             yield event.plain_result("未支持的meme关键词")
             return
@@ -132,6 +125,45 @@ class MemePlugin(Star):
         ]
         yield event.chain_result(chain)
 
+    @filter.command("禁用meme")
+    async def add_supervisor(self, event: AstrMessageEvent, meme_name: str|None=None):
+        """禁用meme"""
+        if not meme_name:
+            yield event.plain_result("未指定要禁用的meme")
+            return
+        if meme_name not in self.meme_keywords:
+            yield event.plain_result(f"meme: {meme_name} 不存在")
+            return
+        if meme_name in self.memes_disabled_list:
+            yield event.plain_result(f"meme: {meme_name} 已被禁用")
+            return
+        self.memes_disabled_list.append(meme_name)
+        self.config.save_config(replace_config=self.config)
+        yield event.plain_result(f"已禁用meme: {meme_name}")
+        logger.info(f"当前禁用meme: {self.config['memes_disabled_list']}")
+
+    @filter.command("启用meme")
+    async def remove_supervisor(self, event: AstrMessageEvent, meme_name: str|None=None):
+        """启用meme"""
+        if not meme_name:
+            yield event.plain_result("未指定要禁用的meme")
+            return
+        if meme_name not in self.meme_keywords:
+            yield event.plain_result(f"meme: {meme_name} 不存在")
+            return
+        if meme_name not in self.memes_disabled_list:
+            yield event.plain_result(f"meme: {meme_name} 未被禁用")
+            return
+        self.memes_disabled_list.remove(meme_name)
+        self.config.save_config(replace_config=self.config)
+        yield event.plain_result(f"已禁用meme: {meme_name}")
+
+    @filter.command("meme黑名单")
+    async def list_supervisors(self, event: AstrMessageEvent):
+        """查看禁用的meme"""
+        yield event.plain_result(f"当前禁用的meme: {self.memes_disabled_list}")
+
+
     @filter.event_message_type(EventMessageType.ALL)
     async def meme_handle(self, event: AstrMessageEvent):
         """
@@ -143,28 +175,40 @@ class MemePlugin(Star):
         - 支持引用消息传参 。
         - 自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数。
         """
-        message_str = event.get_message_str()
-        if not message_str or "详情" in message_str:
-            return
-        message_list = message_str.split()
 
         # 前缀模式
-        if self.prefix:
-            if message_list[0].startswith(self.prefix):
-                message_list[0] = message_list[0][len(self.prefix) :]
+        if self.prefix_mode:
+            chain = event.get_messages()
+            if not chain:
+                return
+            first_seg = chain[0]
+            # 前缀触发
+            if isinstance(first_seg, Comp.Plain):
+                if not any(
+                    first_seg.text.startswith(prefix) for prefix in self.wake_prefix
+                ):
+                    return
+            # @bot触发
+            elif isinstance(first_seg, Comp.At):
+                if str(first_seg.qq) != str(event.get_self_id()):
+                    return
             else:
                 return
+
+        message_str = event.get_message_str()
+        if not message_str:
+            return
 
         # 精准/模糊匹配
         keyword = next(
             (
                 k
-                for k in self.meme_keywords_set
-                if k in (message_str if self.fuzzy_match else message_list)
+                for k in self.meme_keywords
+                if k in (message_str if self.fuzzy_match else message_str.split()[0])
             ),
             None,
         )
-        if not keyword:
+        if not keyword or keyword in self.memes_disabled_list:
             return
 
         # 匹配meme
@@ -228,7 +272,7 @@ class MemePlugin(Star):
                     target_ids.append(seg_qq)
                     at_avatar = await self.get_avatar(seg_qq)
                     # 从消息平台获取At者的额外参数
-                    if (result := await self._get_extra(event, target_id=seg_qq)):
+                    if result := await self._get_extra(event, target_id=seg_qq):
                         nickname, sex = result
                         options["name"], options["gender"] = nickname, sex
                         target_names.append(nickname)
@@ -237,7 +281,11 @@ class MemePlugin(Star):
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
-                    if text != keyword and text != self.prefix:
+                    if (
+                        text != keyword
+                        and text not in self.wake_prefix
+                        and all(text != prefix + keyword for prefix in self.wake_prefix)
+                    ):
                         texts.append(text)
 
         # 如果有引用消息，也遍历之
@@ -252,7 +300,7 @@ class MemePlugin(Star):
 
         # 从消息平台获取发送者的额外参数
         if not target_ids:
-            if (result := await self._get_extra(event, target_id=send_id)):
+            if result := await self._get_extra(event, target_id=send_id):
                 nickname, sex = result
                 options["name"], options["gender"] = nickname, sex
                 target_names.append(nickname)
@@ -325,7 +373,10 @@ class MemePlugin(Star):
     async def _get_extra(event: AstrMessageEvent, target_id: str):
         """从消息平台获取参数"""
         if event.get_platform_name() == "aiocqhttp":
-            from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
+            from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
+                AiocqhttpMessageEvent,
+            )
+
             assert isinstance(event, AiocqhttpMessageEvent)
             client = event.bot
             user_info = await client.get_stranger_info(user_id=int(target_id))
@@ -336,17 +387,23 @@ class MemePlugin(Star):
 
     @staticmethod
     def compress_image(image: bytes, max_size: int = 512) -> bytes | None:
-        """压缩静态图片到max_size大小"""
+        """压缩静态图片或GIF到max_size大小"""
         try:
+            # 将输入的bytes加载为图片
             img = Image.open(io.BytesIO(image))
-            if img.format == "GIF":
-                return None
-            if img.width > max_size or img.height > max_size:
-                img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+            output = io.BytesIO()
 
-                output = io.BytesIO()
+            if img.format == "GIF":
+                return
+            else:
+                # 如果是静态图片，检查尺寸并压缩
+                if img.width > max_size or img.height > max_size:
+                    img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+                # 保存处理后的图片到内存中的BytesIO对象
                 img.save(output, format=img.format)
-                return output.getvalue()
+
+            # 返回处理后的图片数据（bytes）
+            return output.getvalue()
 
         except Exception as e:
             raise ValueError(f"图片压缩失败: {e}")
