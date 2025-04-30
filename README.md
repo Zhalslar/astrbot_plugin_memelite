@@ -125,8 +125,8 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ## 🔗 相关链接
 
-- [meme-generator](https://github.com/MemeCrafters/meme-generator-contrib-rs) 表情包生成器
-- [meme-generator的rust重构版](https://github.com/MemeCrafters/meme-generator-contrib-rs) 表情包生成器的rust重构版
+- [meme-generator](https://github.com/MemeCrafters/meme-generator) 表情包生成器
+- [meme-generator的rust重构版](https://github.com/MemeCrafters/meme-generator-rs) 表情包生成器的rust重构版
 - [meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib)
 - [meme-generator-rs 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib-rs)
 - [nonebot-plugin-memes](https://github.com/MemeCrafters/nonebot-plugin-memes) 表情包生成器 meme-generator 的 Nonebot2 对接插件
