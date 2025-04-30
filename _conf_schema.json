@@ -1,9 +1,9 @@
 {
     "prefix": {
-        "description": "启用全局前缀",
-        "type": "bool",
-        "hint": "启用后，需要在触发词前加上bot的全局前缀",
-        "default": "false"
+        "description": "自定义触发前缀",
+        "type": "string",
+        "hint": "填写后，需要加前缀才能触发meme",
+        "default": ""
     },
      "fuzzy_match": {
         "description": "是否模糊匹配触发",

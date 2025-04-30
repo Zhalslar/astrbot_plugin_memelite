@@ -23,7 +23,7 @@ from astrbot.core.star.filter.event_message_type import EventMessageType
     "astrbot_plugin_memelite",
     "Zhalslar",
     "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
-    "1.0.0",
+    "1.0.1",
     "https://github.com/Zhalslar/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
@@ -35,9 +35,9 @@ class MemePlugin(Star):
         self.memes: list[Meme] = get_memes()
         self.meme_keywords: list = [keyword for meme in self.memes for keyword in meme.keywords]
 
-        self.wake_prefix: list[str] =  self.context.get_config().get("wake_prefix", [])
-        self.prefix_mode: bool = config.get("prefix", False)  # 是否启用前缀模式
-        self.fuzzy_match: int = config.get("fuzzy_match", True)
+        self.prefix: str = config.get("prefix", "")  # 是否启用前缀模式
+
+        self.fuzzy_match: bool = config.get("fuzzy_match", False)
         self.is_compress_image: bool = config.get("is_compress_image", True)
 
         self.is_check_resources: bool = config.get("is_check_resources", True)
@@ -168,16 +168,14 @@ class MemePlugin(Star):
         """
 
         # 前缀模式
-        if self.prefix_mode:
+        if self.prefix:
             chain = event.get_messages()
             if not chain:
                 return
             first_seg = chain[0]
             # 前缀触发
             if isinstance(first_seg, Comp.Plain):
-                if not any(
-                    first_seg.text.startswith(prefix) for prefix in self.wake_prefix
-                ):
+                if not first_seg.text.startswith(self.prefix):
                     return
             # @bot触发
             elif isinstance(first_seg, Comp.At):
@@ -186,20 +184,17 @@ class MemePlugin(Star):
             else:
                 return
 
-        message_str = event.get_message_str()
+        message_str = event.get_message_str().removeprefix(self.prefix)
         if not message_str:
             return
 
-        # 精准/模糊匹配
-        keyword = next(
-            (
-                k
-                for k in self.meme_keywords
-                if k in (message_str if self.fuzzy_match else message_str.split()[0])
-            ),
-            None,
-        )
-        if not keyword or keyword in self.memes_disabled_list:
+        if self.fuzzy_match:
+            # 模糊匹配：检查关键词是否在消息字符串中
+            keyword = next((k for k in self.meme_keywords if k in message_str), None)
+        else:
+            # 精确匹配：检查关键词是否等于消息字符串的第一个单词
+            keyword = next((k for k in self.meme_keywords if k == message_str.split()[0]), None)
+        if not keyword:
             return
 
         # 匹配meme
@@ -277,13 +272,8 @@ class MemePlugin(Star):
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
-                    if (
-                        text != keyword
-                        and text not in self.wake_prefix
-                        and all(text != prefix + keyword for prefix in self.wake_prefix)
-                    ):
+                    if text not in self.prefix and text != self.prefix + keyword:
                         texts.append(text)
-
         # 如果有引用消息，也遍历之
         reply_seg = next((seg for seg in messages if isinstance(seg, Comp.Reply)), None)
         if reply_seg and reply_seg.chain:
