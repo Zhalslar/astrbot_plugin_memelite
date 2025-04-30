@@ -35,7 +35,7 @@ class MemePlugin(Star):
         self.memes: list[Meme] = get_memes()
         self.meme_keywords: list = [keyword for meme in self.memes for keyword in meme.keywords]
 
-        self.prefix: str = config.get("prefix", "")  # 是否启用前缀模式
+        self.prefix: str = config.get("prefix", "")
 
         self.fuzzy_match: bool = config.get("fuzzy_match", False)
         self.is_compress_image: bool = config.get("is_compress_image", True)
@@ -194,7 +194,8 @@ class MemePlugin(Star):
         else:
             # 精确匹配：检查关键词是否等于消息字符串的第一个单词
             keyword = next((k for k in self.meme_keywords if k == message_str.split()[0]), None)
-        if not keyword:
+
+        if not keyword or keyword in self.memes_disabled_list:
             return
 
         # 匹配meme
