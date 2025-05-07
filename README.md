@@ -113,8 +113,8 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 - 一些会引起不适的meme（如'射','撅'）需要自己去添加：[meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib),
   将meme-generator仓库中memes文件夹里的文件 添加到 astrbot虚拟环境目录下的meme_generator/memes文件夹里（如果你不会，建议放弃，没有水平就别搞），然后重启astrbot即可。
 - 如果遇到中文字体显示为乱码，请按照[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator)的文档安装缺失的字体
-- 本插件已换用meme-generator的rust重构版，旧版用户更新需重新下载资源
-- 如果想第一时间得到反馈，请进作者的插件反馈群（QQ群）：460973561
+- 本插件对接的是python版的meme-generator，rust重构版速度更快占用更小，但门槛也更快：[astrbot_plugin_memelite_rs](https://github.com/Zhalslar/astrbot_plugin_memelite_rs)
+- 如果想第一时间得到反馈，请进作者的插件反馈群（QQ群）：460973561（不点star不给进）
 
 ## 👥 贡献指南
 
@@ -125,8 +125,8 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ## 🔗 相关链接
 
-- [meme-generator](https://github.com/MemeCrafters/meme-generator-contrib-rs) 表情包生成器
-- [meme-generator的rust重构版](https://github.com/MemeCrafters/meme-generator-contrib-rs) 表情包生成器的rust重构版
+- [meme-generator](https://github.com/MemeCrafters/meme-generator) 表情包生成器
+- [meme-generator的rust重构版](https://github.com/MemeCrafters/meme-generator-rs) 表情包生成器的rust重构版
 - [meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib)
 - [meme-generator-rs 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib-rs)
 - [nonebot-plugin-memes](https://github.com/MemeCrafters/nonebot-plugin-memes) 表情包生成器 meme-generator 的 Nonebot2 对接插件
