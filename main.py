@@ -1,5 +1,7 @@
 import asyncio
+import base64
 from pathlib import Path
+import random
 import aiohttp
 from meme_generator import Meme, get_memes
 from meme_generator.download import check_resources
@@ -23,7 +25,7 @@ from astrbot.core.star.filter.event_message_type import EventMessageType
     "astrbot_plugin_memelite",
     "Zhalslar",
     "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
-    "1.0.1",
+    "1.0.2",
     "https://github.com/Zhalslar/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
@@ -33,7 +35,9 @@ class MemePlugin(Star):
         self.memes_disabled_list: list[str] = config.get("memes_disabled_list", [])
 
         self.memes: list[Meme] = get_memes()
-        self.meme_keywords: list = [keyword for meme in self.memes for keyword in meme.keywords]
+        self.meme_keywords: list = [
+            keyword for meme in self.memes for keyword in meme.keywords
+        ]
 
         self.prefix: str = config.get("prefix", "")
 
@@ -73,7 +77,7 @@ class MemePlugin(Star):
 
         # 提取meme的所有参数
         name = meme.key
-        params_type =  meme.params_type
+        params_type = meme.params_type
         keywords = meme.keywords
         min_images = params_type.min_images
         max_images = params_type.max_images
@@ -117,7 +121,9 @@ class MemePlugin(Star):
         yield event.chain_result(chain)
 
     @filter.command("禁用meme")
-    async def add_supervisor(self, event: AstrMessageEvent, meme_name: str|None=None):
+    async def add_supervisor(
+        self, event: AstrMessageEvent, meme_name: str | None = None
+    ):
         """禁用meme"""
         if not meme_name:
             yield event.plain_result("未指定要禁用的meme")
@@ -134,7 +140,9 @@ class MemePlugin(Star):
         logger.info(f"当前禁用meme: {self.config['memes_disabled_list']}")
 
     @filter.command("启用meme")
-    async def remove_supervisor(self, event: AstrMessageEvent, meme_name: str|None=None):
+    async def remove_supervisor(
+        self, event: AstrMessageEvent, meme_name: str | None = None
+    ):
         """启用meme"""
         if not meme_name:
             yield event.plain_result("未指定要禁用的meme")
@@ -153,7 +161,6 @@ class MemePlugin(Star):
     async def list_supervisors(self, event: AstrMessageEvent):
         """查看禁用的meme"""
         yield event.plain_result(f"当前禁用的meme: {self.memes_disabled_list}")
-
 
     @filter.event_message_type(EventMessageType.ALL)
     async def meme_handle(self, event: AstrMessageEvent):
@@ -193,7 +200,9 @@ class MemePlugin(Star):
             keyword = next((k for k in self.meme_keywords if k in message_str), None)
         else:
             # 精确匹配：检查关键词是否等于消息字符串的第一个单词
-            keyword = next((k for k in self.meme_keywords if k == message_str.split()[0]), None)
+            keyword = next(
+                (k for k in self.meme_keywords if k == message_str.split()[0]), None
+            )
 
         if not keyword or keyword in self.memes_disabled_list:
             return
@@ -238,7 +247,7 @@ class MemePlugin(Star):
         texts: List[str] = []
         options: dict[str, Any] = {}
 
-        params_type =  meme.params_type
+        params_type = meme.params_type
         max_images = params_type.max_images
         max_texts = params_type.max_texts
         default_texts = params_type.default_texts
@@ -254,16 +263,36 @@ class MemePlugin(Star):
         async def _process_segment(_seg):
             """从消息段中获取参数"""
             if isinstance(_seg, Comp.Image):
-                if img_url := _seg.url:
-                    if msg_image := await self.download_image(img_url):
-                        images.append(msg_image)
+                if hasattr(_seg, "url") and _seg.url:
+                    img_url = _seg.url
+                    # 如果是有效的本地路径，则直接读取文件
+                    if Path(img_url).is_file():
+                        with open(img_url, "rb") as f:
+                            images.append(f.read())
+                    else:  # 否则尝试作为URL下载
+                        if msg_image := await self.download_image(img_url):
+                            images.append(msg_image)
+
+                elif hasattr(_seg, "file"):
+                    file_content = _seg.file
+                    if isinstance(file_content, str):
+                        # 如果是有效的本地路径，则直接读取文件
+                        if Path(file_content).is_file():
+                            with open(file_content, "rb") as f:
+                                images.append(f.read())
+                        else:  # 否则尝试作为Base64编码解析
+                            if file_content.startswith("base64://"):
+                                file_content = file_content[len("base64://") :]
+                            file_content = base64.b64decode(file_content)
+                    if isinstance(file_content, bytes):
+                        images.append(file_content)
 
             elif isinstance(_seg, Comp.At):
                 seg_qq = str(_seg.qq)
                 if seg_qq != self_id:
                     target_ids.append(seg_qq)
-                    at_avatar = await self.get_avatar(seg_qq)
-                    images.append(at_avatar)
+                    if at_avatar := await self.get_avatar(event, seg_qq):
+                        images.append(at_avatar)
                     # 从消息平台获取At者的额外参数
                     if result := await self._get_extra(event, target_id=seg_qq):
                         nickname, sex = result
@@ -275,6 +304,7 @@ class MemePlugin(Star):
                 for text in plains:
                     if text not in self.prefix and text != self.prefix + keyword:
                         texts.append(text)
+
         # 如果有引用消息，也遍历之
         reply_seg = next((seg for seg in messages if isinstance(seg, Comp.Reply)), None)
         if reply_seg and reply_seg.chain:
@@ -299,11 +329,11 @@ class MemePlugin(Star):
 
         # 确保图片数量在min_images到max_images之间
         if len(images) < max_images:
-            use_avatar = await self.get_avatar(send_id)
-            images.insert(0, use_avatar)
+            if use_avatar := await self.get_avatar(event, send_id):
+                images.insert(0, use_avatar)
         if len(images) < max_images:
-            bot_avatar = await self.get_avatar(self_id)
-            images.append(bot_avatar)
+            if bot_avatar := await self.get_avatar(event, self_id):
+                images.append(bot_avatar)
         meme_images = images[:max_images]
 
         # 确保文本数量在min_texts到max_texts之间
@@ -312,7 +342,6 @@ class MemePlugin(Star):
         texts = texts[:max_texts]
 
         return meme_images, texts, options
-
 
     @staticmethod
     async def _get_extra(event: AstrMessageEvent, target_id: str):
@@ -366,8 +395,11 @@ class MemePlugin(Star):
             logger.error(f"图片下载失败: {e}")
 
     @staticmethod
-    async def get_avatar(user_id: str) -> bytes:
+    async def get_avatar(event: AstrMessageEvent, user_id: str) -> bytes | None:
         """下载头像"""
+        # if event.get_platform_name() == "aiocqhttp":
+        if not user_id.isdigit():
+            user_id = "".join(random.choices("0123456789", k=9))
         avatar_url = f"https://q4.qlogo.cn/headimg_dl?dst_uin={user_id}&spec=640"
         try:
             async with aiohttp.ClientSession() as client:
@@ -376,4 +408,4 @@ class MemePlugin(Star):
                 return await response.read()
         except Exception as e:
             logger.error(f"下载头像失败: {e}")
-            return b""
+            return None
