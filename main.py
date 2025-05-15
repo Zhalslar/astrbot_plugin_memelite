@@ -25,7 +25,7 @@ from astrbot.core.star.filter.event_message_type import EventMessageType
     "astrbot_plugin_memelite",
     "Zhalslar",
     "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
-    "1.0.4",
+    "1.0.5",
     "https://github.com/Zhalslar/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
@@ -181,8 +181,9 @@ class MemePlugin(Star):
                 return
             first_seg = chain[0]
             # 前缀触发
-            if isinstance(first_seg, Comp.Plain):
-                if not first_seg.text.startswith(self.prefix):
+            if isinstance(first_seg, Comp.Reply) and len(chain) > 1:
+                second_seg = chain[1]
+                if isinstance(second_seg, Comp.Plain) and not second_seg.text.startswith(self.prefix):
                     return
             # @bot触发
             elif isinstance(first_seg, Comp.At):
