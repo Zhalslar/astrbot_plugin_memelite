@@ -56,11 +56,17 @@ class MemePlugin(Star):
 
     @staticmethod
     def custom_sort_key(keyword):
-        # 如果是汉字，按拼音排序
-        if re.match(r"^[\u4e00-\u9fa5]+$", keyword):
-            return "".join(lazy_pinyin(keyword))
-        # 其他类型不处理，直接返回原关键词
-        return keyword
+        # 获取第一个字符
+        first_char = keyword[0]
+
+        # 判断第一个字符的类型
+        if first_char.isdigit():
+            return (0, -int(first_char))  # 数字从大到小
+        elif re.match(r"^[\u4e00-\u9fa5a-zA-Z]$", first_char):
+            # 汉字或字母按拼音或字母顺序
+            return (1, "".join(lazy_pinyin(first_char)))
+        else:
+            return (2, first_char)  # 其他字符放在最后
 
     @filter.command("meme帮助", alias={"表情帮助"})
     async def memes_help(self, event: AstrMessageEvent):
@@ -72,7 +78,7 @@ class MemePlugin(Star):
             yield event.chain_result([Comp.Image.fromBytes(image_bytes)])
         else:
             yield event.plain_result("meme帮助图生成错误")
-
+ 
     @staticmethod
     def generate_image(
         data_list, image_size=(2068, 2820), font_size=30, columns=5, padding=10
