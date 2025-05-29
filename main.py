@@ -130,6 +130,43 @@ class MemePlugin(Star):
         if tags:
             meme_info += f"标签：{list(tags)}\n"
 
+        param_fields = [f for f in dir(params_type) if not f.startswith('_') and f not in [
+            'min_images', 'max_images', 'min_texts', 'max_texts', 'default_texts'
+        ]]
+        
+        if hasattr(params_type, 'args_type') and hasattr(params_type.args_type, 'parser_options'):
+            options_info = "\n可选参数：\n"
+            for option in params_type.args_type.parser_options:
+
+                param_name = next(
+                    (name.lstrip('-') for name in option.names 
+                    if name.startswith('--') and len(name) > 2
+                ), None)
+
+                if param_name is None and option.names:
+                    param_name = option.names[0].lstrip('-')
+
+                help_text = option.help_text or "无描述"
+
+                param_type = "未知"
+                default_value = "无"
+                if option.args:
+                    arg = option.args[0]
+                    param_type = arg.value or "未知"
+
+                    default_value = arg.default if arg.default is not None else "无"
+                    if default_value == 0:
+                        default_value = "0"
+
+                options_info += (
+                    f"  · {param_name}\n"
+                    f"      描述：{help_text}\n"
+                    f"      类型：{param_type}\n"
+                    f"      默认值：{default_value}\n"
+                )
+
+            meme_info += options_info
+
         preview: bytes = meme.generate_preview().getvalue()  # type: ignore
         chain = [
             Comp.Plain(meme_info),
@@ -327,7 +364,10 @@ class MemePlugin(Star):
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
-                    if text not in self.prefix and text != self.prefix + keyword:
+                    if "=" in text:
+                        k, v = text.split("=", 1)
+                        options[k] = v
+                    elif text not in self.prefix and text != self.prefix + keyword:
                         texts.append(text)
 
         # 如果有引用消息，也遍历之
