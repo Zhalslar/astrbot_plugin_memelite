@@ -130,10 +130,6 @@ class MemePlugin(Star):
         if tags:
             meme_info += f"标签：{list(tags)}\n"
 
-        param_fields = [f for f in dir(params_type) if not f.startswith('_') and f not in [
-            'min_images', 'max_images', 'min_texts', 'max_texts', 'default_texts'
-        ]]
-        
         if hasattr(params_type, 'args_type') and hasattr(params_type.args_type, 'parser_options'):
             options_info = "可选参数：\n"
             for option in params_type.args_type.parser_options:
