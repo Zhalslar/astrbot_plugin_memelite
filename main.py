@@ -135,7 +135,7 @@ class MemePlugin(Star):
         ]]
         
         if hasattr(params_type, 'args_type') and hasattr(params_type.args_type, 'parser_options'):
-            options_info = "\n可选参数：\n"
+            options_info = "可选参数：\n"
             for option in params_type.args_type.parser_options:
 
                 param_name = next(
