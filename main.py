@@ -148,25 +148,12 @@ class MemePlugin(Star):
 
                 help_text = option.help_text or "无描述"
 
-                param_type = "未知"
-                default_value = "无"
-                if option.args:
-                    arg = option.args[0]
-                    param_type = arg.value or "未知"
-
-                    default_value = arg.default if arg.default is not None else "无"
-                    if default_value == 0:
-                        default_value = "0"
-
                 options_info += (
                     f"  · {param_name}\n"
                     f"      描述：{help_text}\n"
-                    f"      类型：{param_type}\n"
-                    f"      默认值：{default_value}\n"
                 )
 
             meme_info += options_info
-
         preview: bytes = meme.generate_preview().getvalue()  # type: ignore
         chain = [
             Comp.Plain(meme_info),
