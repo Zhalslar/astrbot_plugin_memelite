@@ -146,7 +146,7 @@ class MemePlugin(Star):
                 if param_name is None and option.names:
                     param_name = option.names[0].lstrip('-')
 
-                help_text = option.help_text or "无描述"
+                help_text = option.help_text or "无"
 
                 options_info += (
                     f"  · {param_name}\n"
