@@ -130,26 +130,24 @@ class MemePlugin(Star):
         if tags:
             meme_info += f"标签：{list(tags)}\n"
 
-        if hasattr(params_type, 'args_type') and hasattr(params_type.args_type, 'parser_options'):
-            options_info = "可选参数：\n"
-            for option in params_type.args_type.parser_options:
-
-                param_name = next(
-                    (name.lstrip('-') for name in option.names 
-                    if name.startswith('--') and len(name) > 2
-                ), None)
-
-                if param_name is None and option.names:
-                    param_name = option.names[0].lstrip('-')
-
-                help_text = option.help_text or "无"
-
-                options_info += (
-                    f"  · {param_name}\n"
-                    f"      描述：{help_text}\n"
-                )
-
-            meme_info += options_info
+        args_type = getattr(params_type, "args_type", None)
+        if args_type:
+            meme_info += "其它参数(格式: key=value)：\n"
+            for opt in args_type.parser_options:
+                flags = [n for n in opt.names if n.startswith('--')]
+                # 构造参数名部分
+                names_str = ", ".join(flags)
+                part = f"  {names_str}"
+                # 默认值
+                default_val = getattr(opt, "default", None)
+                if default_val is not None:
+                    part += f" (默认={default_val})"
+                # 帮助文本
+                help_text = getattr(opt, "help_text", None)
+                if help_text:
+                    part += f" ： {help_text}"
+                meme_info += part + "\n"
+                
         preview: bytes = meme.generate_preview().getvalue()  # type: ignore
         chain = [
             Comp.Plain(meme_info),
