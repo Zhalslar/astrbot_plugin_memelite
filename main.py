@@ -130,6 +130,24 @@ class MemePlugin(Star):
         if tags:
             meme_info += f"标签：{list(tags)}\n"
 
+        args_type = getattr(params_type, "args_type", None)
+        if args_type:
+            meme_info += "其它参数(格式: key=value)：\n"
+            for opt in args_type.parser_options:
+                flags = [n for n in opt.names if n.startswith('--')]
+                # 构造参数名部分
+                names_str = ", ".join(flags)
+                part = f"  {names_str}"
+                # 默认值
+                default_val = getattr(opt, "default", None)
+                if default_val is not None:
+                    part += f" (默认={default_val})"
+                # 帮助文本
+                help_text = getattr(opt, "help_text", None)
+                if help_text:
+                    part += f" ： {help_text}"
+                meme_info += part + "\n"
+                
         preview: bytes = meme.generate_preview().getvalue()  # type: ignore
         chain = [
             Comp.Plain(meme_info),
@@ -327,7 +345,10 @@ class MemePlugin(Star):
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
-                    if text not in self.prefix and text != self.prefix + keyword:
+                    if "=" in text:
+                        k, v = text.split("=", 1)
+                        options[k] = v
+                    elif text not in self.prefix and text != self.prefix + keyword:
                         texts.append(text)
 
         # 如果有引用消息，也遍历之
