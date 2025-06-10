@@ -21,17 +21,21 @@ from astrbot.core.star.filter.event_message_type import EventMessageType
 from PIL import Image
 from dataclasses import dataclass, field
 
+
 @dataclass
 class MemeProperties:
     disabled: bool = False
     labels: list[Literal["new", "hot"]] = field(default_factory=list)
+
+
 # TODO 禁用meme、new标签、hot标签
+
 
 @register(
     "astrbot_plugin_memelite",
     "Zhalslar",
     "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
-    "1.0.6",
+    "1.0.7",
     "https://github.com/Zhalslar/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
@@ -55,22 +59,19 @@ class MemePlugin(Star):
             logger.info("正在检查memes资源文件...")
             asyncio.create_task(check_resources())
 
-
     @filter.command("meme帮助", alias={"表情帮助, 表情列表"})
     async def memes_help(self, event: AstrMessageEvent):
         "查看有哪些关键词可以触发meme"
         meme_list: List[Tuple[Meme, Optional[MemeProperties]]] = [
-            (meme, MemeProperties(labels=[]))
-            for meme in self.memes
+            (meme, MemeProperties(labels=[])) for meme in self.memes
         ]
         text_template = "{index}.{keywords}"
         image_io: io.BytesIO = render_meme_list(
             meme_list=meme_list,  # type: ignore
             text_template=text_template,
-            add_category_icon = True
+            add_category_icon=True,
         )
         yield event.chain_result([Comp.Image.fromBytes(image_io.getvalue())])
-
 
     @filter.command("meme详情", alias={"表情详情"})
     async def meme_details_show(
@@ -134,7 +135,7 @@ class MemePlugin(Star):
         if args_type:
             meme_info += "其它参数(格式: key=value)：\n"
             for opt in args_type.parser_options:
-                flags = [n for n in opt.names if n.startswith('--')]
+                flags = [n for n in opt.names if n.startswith("--")]
                 # 构造参数名部分
                 names_str = ", ".join(flags)
                 part = f"  {names_str}"
@@ -147,7 +148,7 @@ class MemePlugin(Star):
                 if help_text:
                     part += f" ： {help_text}"
                 meme_info += part + "\n"
-                
+
         preview: bytes = meme.generate_preview().getvalue()  # type: ignore
         chain = [
             Comp.Plain(meme_info),
@@ -345,10 +346,23 @@ class MemePlugin(Star):
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
+                    # 解析其他参数
                     if "=" in text:
                         k, v = text.split("=", 1)
                         options[k] = v
-                    elif text not in self.prefix and text != self.prefix + keyword:
+                    #  解析@qq
+                    elif text.startswith("@"):
+                        target_id = text[1:]
+                        if target_id.isdigit():
+                            target_ids.append(target_id)
+                            if at_avatar := await self.get_avatar(event, target_id):
+                                images.append(at_avatar)
+                            if result := await self._get_extra(event, target_id=target_id):
+                                nickname, sex = result
+                                options["user_infos"] = [{"name": nickname, "gender": sex}]
+                                target_names.append(nickname)
+                    # 解析文本
+                    elif not text.startswith(self.prefix):
                         texts.append(text)
 
         # 如果有引用消息，也遍历之
@@ -373,16 +387,16 @@ class MemePlugin(Star):
         if not target_names:
             target_names.append(sender_name)
 
-        # 确保图片数量在min_images到max_images之间(尽可能地获取图片)
-        if len(images) < max_images:
+        # 确保图片数量在min_images到max_images之间(参数足够即可)
+        if len(images) < min_images:
             if use_avatar := await self.get_avatar(event, send_id):
                 images.insert(0, use_avatar)
-        if len(images) < max_images:
+        if len(images) < min_images:
             if bot_avatar := await self.get_avatar(event, self_id):
                 images.insert(0, bot_avatar)
         meme_images = images[:max_images]
 
-        # 确保文本数量在min_texts到max_texts之间(文本参数足够即可)
+        # 确保文本数量在min_texts到max_texts之间(参数足够即可)
         if len(texts) < min_texts and target_names:
             texts.extend(target_names)
         if len(texts) < min_texts and default_texts:
