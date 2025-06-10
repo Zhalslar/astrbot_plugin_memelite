@@ -104,6 +104,8 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 - 本插件支持从原始消息中提取参数，请用空格隔开参数，如 “喜报 nmsl”
 - 本插件支持从引用消息中提取参数，如“[引用的消息] 喜报”
+- 本插件支持获取任意QQ号的头像作为参数，如“踩 @114514”
+- 本插件支持全部消息平台
 - 提供的参数不够时，插件自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数来补充。
 示例
 ![b421d15916a8db6109bb36c002ba2e5](https://github.com/user-attachments/assets/ec15b5f7-eec2-4552-814d-60dcc4196713)
