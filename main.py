@@ -35,7 +35,7 @@ class MemeProperties:
     "astrbot_plugin_memelite",
     "Zhalslar",
     "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
-    "1.0.7",
+    "1.0.8",
     "https://github.com/Zhalslar/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
@@ -346,6 +346,7 @@ class MemePlugin(Star):
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
                 for text in plains:
+                    text = text.removeprefix(self.prefix).removeprefix(keyword)
                     # 解析其他参数
                     if "=" in text:
                         k, v = text.split("=", 1)
@@ -361,9 +362,10 @@ class MemePlugin(Star):
                                 nickname, sex = result
                                 options["user_infos"] = [{"name": nickname, "gender": sex}]
                                 target_names.append(nickname)
-                    # 解析文本
-                    elif not text.startswith(self.prefix):
+                    elif text:
                         texts.append(text)
+
+
 
         # 如果有引用消息，也遍历之
         reply_seg = next((seg for seg in messages if isinstance(seg, Comp.Reply)), None)
