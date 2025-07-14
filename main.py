@@ -266,12 +266,18 @@ class MemePlugin(Star):
             logger.error(e.message)
             return
 
-        # 压缩图片
+        # 默认使用原始图片
+        image = image_io
+
+        # 如果启用压缩，则尝试压缩图片
         if self.is_compress_image:
             try:
-                image = self.compress_image(image_io) or image_io
-            except:  # noqa: E722
-                pass
+                # 如果压缩成功，则使用压缩后的图片，否则 image 保持为原始图片
+                compressed = self.compress_image(image_io)
+                if compressed:
+                    image = compressed
+            except Exception as e:
+                logger.warning(f"图片压缩失败，将发送原图: {e}")
 
         # 发送图片
         chain = [Comp.Image.fromBytes(image.getvalue())]
