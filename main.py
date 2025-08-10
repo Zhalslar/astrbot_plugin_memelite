@@ -382,6 +382,10 @@ class MemePlugin(Star):
         # 遍历原始消息段落
         for seg in messages:
             await _process_segment(seg)
+            
+        # 调整文本参数优先级
+        if len(target_names) < min_texts and default_texts:
+            texts.extend(default_texts)
 
         # 从消息平台获取发送者的额外参数
         if not target_ids:
@@ -407,8 +411,6 @@ class MemePlugin(Star):
         # 确保文本数量在min_texts到max_texts之间(参数足够即可)
         if len(texts) < min_texts and target_names:
             texts.extend(target_names)
-        if len(texts) < min_texts and default_texts:
-            texts.extend(default_texts)
         texts = texts[:max_texts]
 
         return meme_images, texts, options
