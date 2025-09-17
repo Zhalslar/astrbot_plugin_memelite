@@ -13,6 +13,8 @@ _✨ [AstrBot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨
 
 </div>
 
+# 请谨慎更新v3.0.0
+
 ## 💡 介绍
 
 - 本插件负责处理聊天机器人与[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator) 的对接。
