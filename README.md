@@ -33,6 +33,7 @@ _✨ [AstrBot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨
 
 - 可以直接在 AstrBot 的插件市场搜索 `astrbot_plugin_memelite`，点击安装，默认安装的是 Python 版本。
 - 如果需要安装Rust 版，请手动下载仓库后，更改requirements.txt中`meme_generator~=0.1.12`为`meme_generator~=0.2.0`。然后将astrbot_plugin_memelite文件夹放入插件目录`data\plugins`，重启Astrbot即可。
+- 装好后不推荐再换版本，如果实在需要切换，请进入Astrbot的虚拟环境，手动删除原来的meme_generator，然后更改requirements.txt中的meme_generator版本号，再重新运行插件的requirements.txt文件安装依赖。
 
 Docker 部署的 AstrBot，直接安装本插件可能会报错，可能是缺系统依赖，进入容器执行：
 
