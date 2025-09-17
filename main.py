@@ -11,7 +11,7 @@ from .core.meme import MemeManager
 from .utils import compress_image
 
 
-@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器", "v2.0.0")
+@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器", "v3.0.0")
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
