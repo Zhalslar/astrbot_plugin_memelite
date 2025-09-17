@@ -1,46 +1,44 @@
 {
-    "prefix": {
-        "description": "自定义触发前缀",
+    "need_prefix": {
+        "description": "启用触发前缀",
+        "hint": "启用后需要前缀或者@bot来触发meme",
+        "type": "bool",
+        "default": true
+    },
+    "extra_prefix": {
+        "description": "'额外前缀",
+        "hint": "填写后, 需要额外附加一个前缀来触发meme, 留空则不启用",
         "type": "string",
-        "hint": "填写后，需要加前缀才能触发meme",
         "default": ""
     },
-     "fuzzy_match": {
+    "fuzzy_match": {
         "description": "是否模糊匹配触发",
         "type": "bool",
         "hint": "消息中含有关键词即可触发meme，谨慎打开，容易误触",
         "default": false
     },
-     "is_compress_image": {
-          "description": "是否压缩图片",
-          "type": "bool",
-          "hint": "压缩长或宽超过512px的静态生成图，防止大图展示，可防刷屏",
-          "default": true
-      },
-
-   "is_check_resources": {
-          "description": "启动时检查资源",
-          "type": "bool",
-          "hint": "每次启动本插件时，检查一遍meme所需资源，缺失资源会自动下载，确保资源下载完整时可关掉这个选项，关掉可优化启动性能",
-          "default": true
-      },
-    "sort_by_str": {
-        "description": "meme列表排序方式",
-        "type": "string",
-        "hint": "影响查看meme列表时的排序(暂时是无效配置)",
-        "options": [
-            "key",
-            "keywords",
-            "keywords_pinyin",
-            "date_created",
-            "date_modified"
-        ],
-        "default": "key"
+    "is_compress_image": {
+        "description": "是否压缩图片",
+        "type": "bool",
+        "hint": "压缩长或宽超过512px的静态生成图，防止大图展示，可防刷屏",
+        "default": true
+    },
+    "is_check_resources": {
+        "description": "启动时检查资源",
+        "type": "bool",
+        "hint": "每次启动本插件时，检查一遍meme所需资源，缺失资源会自动下载，确保资源下载完整时可关掉这个选项，关掉可优化启动性能",
+        "default": true
+    },
+    "meme_timeout": {
+        "description": "meme生成的超时时长",
+        "type": "int",
+        "hint": "meme生成超时，单位秒",
+        "default": 15
     },
     "memes_disabled_list": {
         "description": "meme黑名单",
         "type": "list",
         "hint": "黑名单里的关键词会被屏蔽而无法触发meme",
-      "default": []
+        "default": []
     }
 }
