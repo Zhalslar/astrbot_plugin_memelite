@@ -48,9 +48,8 @@ class ParamsCollector:
         # 3. Base64
         elif src.startswith("base64://"):
             return base64.b64decode(src[9:])
-        if not raw:
-            return None
-        return raw
+        # 4. 返回bytes/None
+        return raw if isinstance(raw, bytes) else None
 
     async def get_extra(self, event: AstrMessageEvent, target_id: str):
         """从消息平台获取参数"""

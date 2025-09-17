@@ -8,7 +8,7 @@ import astrbot.core.message.components as Comp
 from astrbot.core.star.filter.event_message_type import EventMessageType
 from .core.param import ParamsCollector
 from .core.meme import MemeManager
-from .uitls import compress_image
+from .utils import compress_image
 
 
 @register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器", "v2.0.0")
@@ -134,9 +134,9 @@ class MemePlugin(Star):
         # 压缩图片
         if self.conf["is_compress_image"]:
             try:
-                image = compress_image(image) or image
-            except:  # noqa: E722
-                pass
+                image = compress_image(image)
+            except Exception:
+                image = image
 
         # 发送图片
         yield event.chain_result([Comp.Image.fromBytes(image)])  # type: ignore
