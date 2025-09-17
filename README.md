@@ -15,8 +15,10 @@ _✨ [AstrBot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨
 
 ## 💡 介绍
 
-- 本插件负责处理聊天机器人与[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator) 的对接，具体表情包制作相关资源文件和代码在其仓库中可以找到。
+- 本插件负责处理聊天机器人与[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator) 的对接。
 - 本插件使用本地部署的 meme-generator。同时尽量保持插件的轻量化，表情包生成快，性能要求低。
+- 增强功能：图片过大自动压缩、meme生成超时控制、meme黑名单、智能解析参数、支持@某人/@qq号、支持额外参数传递
+- 同时兼容了 Python 版和 Rust 版的 meme-generator。
 
 ## 📦 安装
 
@@ -29,16 +31,8 @@ _✨ [AstrBot](https://github.com/AstrBotDevs/AstrBot) 表情包制作插件 ✨
 
 ### 第二步、安装本插件
 
-- 可以直接在 AstrBot 的插件市场搜索 `astrbot_plugin_memelite`，点击安装，耐心等待安装完成即可。
-- 或者可以直接克隆源码到插件文件夹：
-
-```bash
-# 克隆仓库到插件目录
-cd /AstrBot/data/plugins
-git clone https://github.com/Zhalslar/astrbot_plugin_memelite
-
-# 控制台重启 AstrBot
-```
+- 可以直接在 AstrBot 的插件市场搜索 `astrbot_plugin_memelite`，点击安装，默认安装的是 Python 版本。
+- 如果需要安装Rust 版，请手动下载仓库后，更改requirements.txt中`meme_generator~=0.1.12`为`meme_generator~=0.2.0`。然后将astrbot_plugin_memelite文件夹放入插件目录`data\plugins`，重启Astrbot即可。
 
 Docker 部署的 AstrBot，直接安装本插件可能会报错，可能是缺系统依赖，进入容器执行：
 
@@ -58,7 +52,15 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 请在 AstrBot 面板配置，插件管理 -> astrbot_plugin_memelite -> 操作 -> 插件配置
 
-![图片](https://github.com/user-attachments/assets/fe3c6adf-f210-4d93-9d8c-a06216507f10)
+| 配置项              | 描述               | 默认值    |
+|---------------------|------------------|---------|
+| `need_prefix`       | 启用触发前缀，需要前缀或 @bot 才能触发 meme | `true` |
+| `extra_prefix`      | 额外前缀，填写后需附加该前缀才能触发，留空不启用 | `""` |
+| `fuzzy_match`       | 模糊匹配触发，消息中含关键词即可触发，易误触 | `false` |
+| `is_compress_image` | 压缩图片，限制生成图长宽不超过 512px 防刷屏 | `true` |
+| `is_check_resources`| 启动时检查资源，缺失资源会自动下载，关闭可优化启动性能 | `true` |
+| `meme_timeout`      | meme 生成超时时长，单位秒 | `15` |
+| `memes_disabled_list`| meme 黑名单，屏蔽其中关键词的触发 | `[]` |
 
 ## ⌨️ 命令
 
@@ -113,12 +115,95 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ![b421d15916a8db6109bb36c002ba2e5](https://github.com/user-attachments/assets/ec15b5f7-eec2-4552-814d-60dcc4196713)
 
+## 🐍 额外表情安装教程（如'射','撅'）
+
+> 步骤繁琐，没有需要的话就别装。
+
+> 实在想装的话就好好看文档，别来烦作者。
+
+> 实在想找作者的话，先点个star再说，没点的不给予理会。
+
+> 已经写得很详细了，还是不会的话建议放弃。
+
+### python版安装教程
+
+- 前往 [meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib)，下载仓库中 `memes` 文件夹里的文件
+
+- 将 下载好的文件添加到 AstrBot 虚拟环境目录下的 `meme_generator/memes/` 文件夹里，然后重启 AstrBot 即可。
+
+不同系统下的虚拟环境路径为：
+
+    Linux: AstrBot/venv/lib/python3.10/site-packages/meme_generator
+    MacOS: 没用过
+    Windows: AstrBot\.venv\Lib\site-packages\meme_generato
+    Docker: 问问用Docker的人
+
+### Rust版安装教程
+
+#### 第一步，下载动态链接库  
+
+前往[meme-generator 额外表情动态链接库](https://github.com/MemeCrafters/meme-generator-contrib-rs/actions) 往下滑找到动态链接库，根据你的环境选择对应版本，如图示例：
+![tmp1CF8](https://github.com/user-attachments/assets/fbb39f01-8a25-4602-90a1-629876cc13e8)
+下载完后解压得到的.so后缀文件，这个文件就是所需的动态链接库。
+
+#### 第二步，动态链接库放置于 $MEME_HOME/libraries 文件夹下
+
+$MEME_HOME 默认位置为 $HOME/.meme_generator  
+libraries文件夹若不存在则新建一个
+
+不同系统下的目录为：
+
+    Linux: /home/.meme_generator/libraries 或 /root/.meme_generator/libraries
+    MacOS: /Users/<username>/libraries
+    Windows: C:\Users\<username>\libraries
+    Docker: 问问用Docker的人
+
+Linux和windows的示例路径：
+![tmp41F5](https://github.com/user-attachments/assets/ffbcb3d5-d971-409f-ba2e-86db76a6a9d6)
+
+#### 第三步，在 配置文件 将 load_external_memes 设置为 true
+
+打开config.toml文件，将下面的内容复制粘贴进去即可（当然其他配置你也可以根据个人喜好更改）
+
+```plaintext
+[meme]
+load_builtin_memes = true  # 是否加载内置表情包
+load_external_memes = true  # 是否加载外部表情包
+meme_disabled_list = []  # 禁用的表情包列表，填写表情的 `key`
+
+[resource]
+resource_url = "https://cdn.jsdelivr.net/gh/MemeCrafters/meme-generator-rs@"  # 下载内置表情包图片/字体时的资源链接
+download_fonts = true  # 是否下载字体
+
+[font]
+use_local_fonts = true  # 是否使用本地文件夹下的字体
+default_font_families = ["Noto Sans SC", "Noto Color Emoji"]  # 默认字体
+
+[encoder]
+gif_max_frames = 200  # 限制生成的 gif 帧数
+gif_encode_speed = 29  # gif 编码速度，范围为 1 ~ 30，数字越大，编码速度越快，但图片质量越差
+
+[api]
+baidu_trans_appid = ""  # 百度翻译api相关，部分表情需要使用
+baidu_trans_apikey = ""  # 可在 百度翻译开放平台 (http://api.fanyi.baidu.com) 申请
+
+[server]
+host = "0.0.0.0"  # web server 监听地址
+port = 2233  # web server 端口
+```
+
+#### 第四步，下载图片/字体资源并放置于 $MEME_HOME/resources 文件夹下
+
+如图在Linux下的示例操作：
+
+![tmp6EA4](https://github.com/user-attachments/assets/e141c05b-8996-451a-b85d-55b1e7891ccb)
+
+#### 第五步，重启astrbot
+
 ## 📌 注意事项
 
-- 一些会引起不适的表情（如「射」「撅」等）需自行添加 [meme-generator 额外表情仓库](https://github.com/MemeCrafters/meme-generator-contrib),
-  将 meme-generator 仓库中 `memes/` 文件夹里的文件添加到 AstrBot 虚拟环境目录下的 `meme_generator/memes/` 文件夹里（如果你不会，建议放弃，没有水平就别搞），然后重启 AstrBot 即可。
 - 如果遇到中文字体显示为乱码，请按照[表情包生成器 meme-generator](https://github.com/MeetWq/meme-generator) 的文档安装缺失的字体。
-- 本插件对接的是 Python 版的 meme-generator，Rust 重构版速度更快占用更小，但门槛也更高：[astrbot_plugin_memelite_rs](https://github.com/Zhalslar/astrbot_plugin_memelite_rs)
+
 - 如果想第一时间得到反馈，请进作者的插件反馈 QQ 群：460973561（不点 star 不给进）
 
 ## 👥 贡献指南
