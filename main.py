@@ -11,7 +11,7 @@ from .core.meme import MemeManager
 from .utils import compress_image
 
 
-@register("astrbot_plugin_memelite", "Zhalslar", "表情包生成器", "v3.0.0")
+@register("astrbot_plugin_memelite", "Zhalslar", "...", "...")
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -128,18 +128,14 @@ class MemePlugin(Star):
             logger.error(f"meme生成异常: {e}")
             return
 
-        if not image:
-            return
-
-        # 压缩图片
-        if self.conf["is_compress_image"]:
+        if image and self.conf["is_compress_image"]:
             try:
-                image = compress_image(image)
+                image = compress_image(image) or image
             except Exception:
-                image = image
+                pass
 
-        # 发送图片
-        yield event.chain_result([Comp.Image.fromBytes(image)])  # type: ignore
+        if image:
+            yield event.chain_result([Comp.Image.fromBytes(image)])  # type: ignore
 
     async def terminate(self):
         """插件终止时清理调度器"""
