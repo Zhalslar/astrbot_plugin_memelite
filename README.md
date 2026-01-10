@@ -152,8 +152,8 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
       # 格式: - ./宿主机路径:容器内路径
       - /root/astrbot_data/meme_generator:/usr/local/lib/python3.11/site-packages/meme_generator
       可能会遇到报错:加载 astrbot_plugin_memelite 插件时出现问题，原因 libEGL.so.1: cannot open shared object file: No such file or directory。
-      需要在容器内执行 : apt-get update && apt-get install -y libegl1 libgl1 libglib2.0-0t64 ,然后重启当前容器,如果依然失败请手动补齐以来
-      文字丢失显示口:请执行 apt-get update && apt-get install -y fonts-noto-cjk fonts-wqy-zenhei fonts-wqy-microhei,之后执行:fc-cache -fv 从而刷新缓存 然后重启容器
+      需要在容器内执行 : apt-get update && apt-get install -y libegl1 libgl1 libglib2.0-0t64 ,然后重启当前容器,如果依然失败请手动补齐依赖
+      文字丢失显示口:请执行 apt-get update && apt-get install -y fonts-noto-cjk fonts-wqy-zenhei fonts-wqy-microhei,之后执行:fc-cache -fv 然后刷新缓存 然后重启容器
 
 ### Rust版安装教程（会复杂一点点）
 
