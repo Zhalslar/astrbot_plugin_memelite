@@ -86,7 +86,7 @@ class MemePlugin(Star):
             return
         self.conf["memes_disabled_list"].remove(meme_name)
         self.conf.save_config()
-        yield event.plain_result(f"已禁用meme: {meme_name}")
+        yield event.plain_result(f"已启用meme: {meme_name}")
 
     @filter.command("meme黑名单")
     async def list_supervisors(self, event: AstrMessageEvent):
