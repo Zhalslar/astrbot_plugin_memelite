@@ -99,6 +99,15 @@ class ParamsCollector:
                 plains: list[str] = seg.text.strip().split(" ")
                 if len(plains) > 1:
                     for text in plains[1:]:
+                        if text in {"左", "右", "上", "下"}:
+                            # 解析方向参数
+                            options["direction"] = {
+                                "左": "left",
+                                "右": "right",
+                                "上": "top",
+                                "下": "bottom",
+                            }[text]
+                            continue
                         # 解析其他参数
                         if "=" in text:
                             k, v = text.split("=", 1)
