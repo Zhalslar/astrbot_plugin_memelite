@@ -22,7 +22,7 @@ def _parse_version(version: str) -> tuple[int, int, int]:
 
 def _resolve_version(module: Any) -> str:
     try:
-        from meme_generator.version import __version__ as legacy_version
+        from meme_generator.version import __version__ as legacy_version  # type: ignore
 
         return str(legacy_version)
     except ImportError:
@@ -98,8 +98,8 @@ class MemeManager:
             return
 
         if self.is_py_version:
-            from meme_generator.download import check_resources
-            from meme_generator.utils import render_meme_list, run_sync
+            from meme_generator.download import check_resources  # type: ignore
+            from meme_generator.utils import render_meme_list, run_sync  # type: ignore
 
             self.render_meme_list_func = render_meme_list
             self.check_resources_func = check_resources
