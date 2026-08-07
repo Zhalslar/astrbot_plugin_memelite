@@ -32,7 +32,6 @@ class MemePlugin(Star):
             self._resource_task.cancel()
             with suppress(asyncio.CancelledError):
                 await self._resource_task
-        await self.collector.close()
         await self.avatar_manager.close()
 
     @filter.command("meme列表", alias={"表情帮助", "meme菜单", "meme帮助"})
