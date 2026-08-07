@@ -1,9 +1,11 @@
 import asyncio
 import io
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from importlib.metadata import PackageNotFoundError, version as get_package_version
-from typing import Any, Literal
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as get_package_version
+from typing import Any, Literal, Protocol
 
 from astrbot import logger
 from astrbot.core.config.astrbot_config import AstrBotConfig
@@ -14,7 +16,8 @@ from .param import ParamsCollector
 
 def _parse_version(version: str) -> tuple[int, int, int]:
     parts = [int(part) for part in re.findall(r"\d+", version)[:3]]
-    return tuple((parts + [0, 0, 0])[:3])  # type: ignore[return-value]
+    major, minor, patch = (parts + [0, 0, 0])[:3]
+    return major, minor, patch
 
 
 def _resolve_version(module: Any) -> str:
@@ -40,15 +43,26 @@ def _resolve_version(module: Any) -> str:
 
 IMPORT_ERROR: str | None = None
 
+
+class MemeLike(Protocol):
+    key: str
+    params_type: Any
+
+    def generate_preview(self) -> Any:
+        """Generate a meme preview."""
+
+    def generate(self, *args: Any, **kwargs: Any) -> Any:
+        """Generate a meme image."""
+
+
 try:
     import meme_generator as meme_generator_module
-    from meme_generator import Meme, get_memes
+    from meme_generator import get_memes
 
     __version__ = _resolve_version(meme_generator_module)
     MEME_GENERATOR_AVAILABLE = True
 except ImportError as exc:
     meme_generator_module = None
-    Meme = Any  # type: ignore[assignment]
     MEME_GENERATOR_AVAILABLE = False
     IMPORT_ERROR = str(exc)
     __version__ = "0.0.0"
@@ -69,13 +83,13 @@ class MemeManager:
     def __init__(self, config: AstrBotConfig, collect: ParamsCollector):
         self.conf = config
         self.collect = collect
-        self.memes: list[Meme] = []
+        self.memes: list[MemeLike] = []
         self.meme_keywords: list[str] = []
 
-        self.render_meme_list_func: Any = None
-        self.check_resources_func: Any = None
-        self.run_sync: Any = None
-        self.MemeImage: Any = None
+        self.render_meme_list_func: Callable[..., Any] | None = None
+        self.check_resources_func: Callable[..., Any] | None = None
+        self.run_sync: Callable[[Any], Callable[..., Any]] | None = None
+        self.MemeImage: type[Any] | None = None
         self.MemePropertiesType: Any = LegacyMemeProperties
         self.MemeSortBy: Any = None
 
@@ -95,6 +109,8 @@ class MemeManager:
         from meme_generator import Image as MemeImage
         from meme_generator.tools import (
             MemeProperties as RustMemeProperties,
+        )
+        from meme_generator.tools import (
             MemeSortBy,
             render_meme_list,
         )
@@ -102,7 +118,9 @@ class MemeManager:
         try:
             from meme_generator.resources import check_resources
         except ImportError:
-            from meme_generator.resources import check_resources_in_background as check_resources
+            from meme_generator.resources import (
+                check_resources_in_background as check_resources,
+            )
 
         self.render_meme_list_func = render_meme_list
         self.check_resources_func = check_resources
@@ -129,24 +147,28 @@ class MemeManager:
         return bool(self.memes)
 
     @staticmethod
-    def _get_info(meme: Meme) -> Any | None:
+    def _get_info(meme: MemeLike) -> Any | None:
         return getattr(meme, "info", None)
 
-    def _get_keywords(self, meme: Meme) -> list[str]:
+    def _get_keywords(self, meme: MemeLike) -> list[str]:
         info = self._get_info(meme)
         if info is not None and hasattr(info, "keywords"):
             return list(info.keywords)
         return list(getattr(meme, "keywords", []))
 
-    def _get_params(self, meme: Meme) -> Any:
+    def _get_params(self, meme: MemeLike) -> Any:
         info = self._get_info(meme)
         if info is not None and hasattr(info, "params"):
             return info.params
         return meme.params_type
 
-    def _get_tags(self, meme: Meme) -> list[str]:
+    def _get_tags(self, meme: MemeLike) -> list[str]:
         info = self._get_info(meme)
-        tags = info.tags if info is not None and hasattr(info, "tags") else getattr(meme, "tags", [])
+        tags = (
+            info.tags
+            if info is not None and hasattr(info, "tags")
+            else getattr(meme, "tags", [])
+        )
         return list(tags)
 
     @staticmethod
@@ -185,7 +207,7 @@ class MemeManager:
 
         self._load_memes()
 
-    def find_meme(self, keyword: str) -> Meme | None:
+    def find_meme(self, keyword: str) -> MemeLike | None:
         if not self._ensure_memes_loaded():
             return None
 
@@ -206,30 +228,45 @@ class MemeManager:
             return None
 
         if fuzzy_match:
-            return next((keyword for keyword in self.meme_keywords if keyword in text), None)
+            return next(
+                (keyword for keyword in self.meme_keywords if keyword in text), None
+            )
 
-        first_word = text.split()[0] if text.split() else ""
-        return next((keyword for keyword in self.meme_keywords if keyword == first_word), None)
+        parts = text.split()
+        first_word = parts[0] if parts else ""
+        return next(
+            (keyword for keyword in self.meme_keywords if keyword == first_word), None
+        )
 
     async def render_meme_list_image(self) -> bytes | None:
-        if not self._ensure_memes_loaded() or not self.render_meme_list_func:
+        if not self._ensure_memes_loaded():
             return None
 
         if self.is_py_version:
+            render_meme_list = self.render_meme_list_func
+            if not render_meme_list:
+                return None
+
             meme_list = [(meme, LegacyMemeProperties(labels=[])) for meme in self.memes]
-            rendered = self.render_meme_list_func(
-                meme_list=meme_list,  # type: ignore[arg-type]
+            rendered = render_meme_list(
+                meme_list=meme_list,
                 text_template="{index}.{keywords}",
                 add_category_icon=True,
             )
             return self._unwrap_bytes(rendered, "render meme list")
 
-        meme_props = {meme.key: self.MemePropertiesType() for meme in self.memes}
+        render_meme_list = self.render_meme_list_func
+        meme_properties_type = self.MemePropertiesType
+        meme_sort_by = self.MemeSortBy
+        if not render_meme_list or meme_sort_by is None:
+            return None
+
+        meme_props = {meme.key: meme_properties_type() for meme in self.memes}
         rendered = await asyncio.to_thread(
-            self.render_meme_list_func,
+            render_meme_list,
             meme_properties=meme_props,
             exclude_memes=[],
-            sort_by=self.MemeSortBy.KeywordsPinyin,
+            sort_by=meme_sort_by.KeywordsPinyin,
             sort_reverse=False,
             text_template="{index}. {keywords}",
             add_category_icon=True,
@@ -245,29 +282,34 @@ class MemeManager:
         keywords = self._get_keywords(meme)
         tags = self._get_tags(meme)
 
-        meme_info = ""
+        lines: list[str] = []
         if meme.key:
-            meme_info += f"名称：{meme.key}\n"
+            lines.append(f"名称：{meme.key}")
         if keywords:
-            meme_info += f"别名：{keywords}\n"
+            lines.append(f"别名：{keywords}")
         if params.max_images > 0:
-            meme_info += (
-                f"所需图片：{params.min_images}张\n"
+            lines.append(
+                f"所需图片：{params.min_images}张"
                 if params.min_images == params.max_images
-                else f"所需图片：{params.min_images}~{params.max_images}张\n"
+                else f"所需图片：{params.min_images}~{params.max_images}张"
             )
         if params.max_texts > 0:
-            meme_info += (
-                f"所需文本：{params.min_texts}段\n"
+            lines.append(
+                f"所需文本：{params.min_texts}段"
                 if params.min_texts == params.max_texts
-                else f"所需文本：{params.min_texts}~{params.max_texts}段\n"
+                else f"所需文本：{params.min_texts}~{params.max_texts}段"
             )
         if params.default_texts:
-            meme_info += f"默认文本：{params.default_texts}\n"
+            lines.append(f"默认文本：{params.default_texts}")
         if tags:
-            meme_info += f"标签：{tags}\n"
+            lines.append(f"标签：{tags}")
 
-        preview = self._unwrap_bytes(meme.generate_preview(), f"generate preview for {meme.key}")
+        meme_info = "\n".join(lines)
+        if meme_info:
+            meme_info += "\n"
+        preview = self._unwrap_bytes(
+            meme.generate_preview(), f"generate preview for {meme.key}"
+        )
         return meme_info, preview
 
     async def generate_meme(
@@ -281,10 +323,20 @@ class MemeManager:
         images, texts, options = await self.collect.collect_params(event, params)
 
         if self.is_py_version:
+            run_sync = self.run_sync
+            if not run_sync:
+                return None
+
             meme_images = [image for _, image in images]
-            result = await self.run_sync(meme)(images=meme_images, texts=texts, args=options)
+            result = await run_sync(meme)(images=meme_images, texts=texts, args=options)
             return self._unwrap_bytes(result, f"generate meme {meme.key}")
 
-        meme_images = [self.MemeImage(name=str(name), data=data) for name, data in images]
+        meme_image_type = self.MemeImage
+        if not meme_image_type:
+            return None
+
+        meme_images = [
+            meme_image_type(name=str(name), data=data) for name, data in images
+        ]
         result = await asyncio.to_thread(meme.generate, meme_images, texts, options)
         return self._unwrap_bytes(result, f"generate meme {meme.key}")
