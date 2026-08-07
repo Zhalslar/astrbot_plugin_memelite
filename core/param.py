@@ -126,5 +126,3 @@ class ParamsCollector:
 
         return images, texts, options
 
-    async def close(self):
-        await self.avatar_manager.close()
