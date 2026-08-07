@@ -25,8 +25,16 @@ class MemePlugin(Star):
     async def initialize(self):
         self._resource_task = asyncio.create_task(self.manager.check_resources())
 
-    @filter.command("meme帮助", alias={"表情帮助", "meme菜单", "meme列表"})
+    async def terminate(self):
+        if self._resource_task and not self._resource_task.done():
+            self._resource_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._resource_task
+        await self.collector.close()
+
+    @filter.command("meme列表", alias={"表情帮助", "meme菜单", "meme帮助"})
     async def memes_help(self, event):
+        """显示meme列表"""
         if output := await self.manager.render_meme_list_image():
             yield event.chain_result([Comp.Image.fromBytes(output)])
         else:
@@ -36,6 +44,7 @@ class MemePlugin(Star):
     async def meme_details_show(
         self, event: AstrMessageEvent, keyword: str | int | None = None
     ):
+        """meme详情 <名称>"""
         if not keyword:
             yield event.plain_result("未指定要查看的meme")
             return
@@ -57,7 +66,7 @@ class MemePlugin(Star):
     async def add_supervisor(
         self, event: AstrMessageEvent, meme_name: str | None = None
     ):
-        """禁用meme"""
+        """禁用meme <名称>"""
         if not meme_name:
             yield event.plain_result("未指定要禁用的meme")
             return
@@ -76,7 +85,7 @@ class MemePlugin(Star):
     async def remove_supervisor(
         self, event: AstrMessageEvent, meme_name: str | None = None
     ):
-        """启用meme"""
+        """启用meme <名称>"""
         if not meme_name:
             yield event.plain_result("未指定要禁用的meme")
             return
@@ -140,10 +149,3 @@ class MemePlugin(Star):
         if image:
             yield event.chain_result([Comp.Image.fromBytes(image)])  # type: ignore
 
-    async def terminate(self):
-        """插件终止时清理调度器"""
-        if self._resource_task and not self._resource_task.done():
-            self._resource_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await self._resource_task
-        await self.collector.close()

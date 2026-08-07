@@ -1,6 +1,6 @@
 import base64
+import random
 from pathlib import Path
-from random import random
 
 import aiohttp
 
@@ -40,16 +40,12 @@ class ParamsCollector:
     async def _decode_image(self, src: str) -> bytes | None:
         """统一把 src 转成 bytes"""
         raw: bytes | None = None
-        # 1. 本地文件
         if Path(src).is_file():
             raw = Path(src).read_bytes()
-        # 2. URL
         elif src.startswith("http"):
             raw = await self._download_image(src)
-        # 3. Base64
         elif src.startswith("base64://"):
             return base64.b64decode(src[9:])
-        # 4. 返回bytes/None
         return raw if isinstance(raw, bytes) else None
 
     async def get_extra(self, event: AstrMessageEvent, target_id: str):
