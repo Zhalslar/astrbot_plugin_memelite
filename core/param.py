@@ -1,13 +1,11 @@
 import base64
-import random
 from pathlib import Path
 
-import aiohttp
-
-from astrbot.api import logger
 from astrbot.core.config.astrbot_config import AstrBotConfig
 from astrbot.core.message.components import At, Image, Plain, Reply
 from astrbot.core.platform.astr_message_event import AstrMessageEvent
+
+from .avatar import AvatarManager
 
 
 class ParamsCollector:
@@ -15,27 +13,9 @@ class ParamsCollector:
     参数收集类
     """
 
-    def __init__(self, config: AstrBotConfig):
+    def __init__(self, config: AstrBotConfig, avatar_manager: AvatarManager):
         self.conf = config
-        self.session = aiohttp.ClientSession()
-
-    async def _download_image(self, url: str, http: bool = True) -> bytes | None:
-        """下载图片"""
-        if http:
-            url = url.replace("https://", "http://")
-        try:
-            async with self.session.get(url) as resp:
-                return await resp.read()
-        except Exception as e:
-            logger.error(f"图片下载失败: {e}")
-            return None
-
-    async def get_avatar(self, user_id: str) -> bytes | None:
-        """根据 QQ 号下载头像"""
-        if not user_id.isdigit():
-            user_id = f"{random.randint(10_000_000, 999_999_999)}"
-        avatar_url = f"https://q4.qlogo.cn/headimg_dl?dst_uin={user_id}&spec=640"
-        return await self._download_image(avatar_url)
+        self.avatar_manager = avatar_manager
 
     async def _decode_image(self, src: str) -> bytes | None:
         """统一把 src 转成 bytes"""
@@ -43,7 +23,7 @@ class ParamsCollector:
         if Path(src).is_file():
             raw = Path(src).read_bytes()
         elif src.startswith("http"):
-            raw = await self._download_image(src)
+            raw = await self.avatar_manager.download_image(src)
         elif src.startswith("base64://"):
             return base64.b64decode(src[9:])
         return raw if isinstance(raw, bytes) else None
@@ -74,7 +54,7 @@ class ParamsCollector:
         if result := await self.get_extra(event, target_id):
             nickname, sex = result
             options["name"], options["gender"] = nickname, sex
-            if avatar := await self.get_avatar(target_id):
+            if avatar := await self.avatar_manager.get_avatar(target_id):
                 images.append((nickname, avatar))
 
     async def collect_params(self, event: AstrMessageEvent, params):
@@ -132,10 +112,10 @@ class ParamsCollector:
 
         # 确保图片数量在min_images到max_images之间(参数足够即可)
         if len(images) < params.min_images:
-            if sender_avatar := await self.get_avatar(send_id):
+            if sender_avatar := await self.avatar_manager.get_avatar(send_id):
                 images.insert(0, (sender_name, sender_avatar))
         if len(images) < params.min_images:
-            if bot_avatar := await self.get_avatar(self_id):
+            if bot_avatar := await self.avatar_manager.get_avatar(self_id):
                 images.insert(0, ("bot", bot_avatar))
         images = images[: params.max_images]
 
@@ -146,6 +126,3 @@ class ParamsCollector:
 
         return images, texts, options
 
-    async def close(self):
-        if hasattr(self, "session"):
-            await self.session.close()
