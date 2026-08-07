@@ -9,6 +9,7 @@ from astrbot.core import AstrBotConfig
 from astrbot.core.platform import AstrMessageEvent
 from astrbot.core.star.filter.event_message_type import EventMessageType
 
+from .core.avatar import AvatarManager
 from .core.meme import MemeManager
 from .core.param import ParamsCollector
 from .utils import compress_image
@@ -18,7 +19,8 @@ class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.conf = config
-        self.collector = ParamsCollector(config)
+        self.avatar_manager = AvatarManager()
+        self.collector = ParamsCollector(config, self.avatar_manager)
         self.manager = MemeManager(config, self.collector)
         self._resource_task: asyncio.Task | None = None
 
@@ -31,6 +33,7 @@ class MemePlugin(Star):
             with suppress(asyncio.CancelledError):
                 await self._resource_task
         await self.collector.close()
+        await self.avatar_manager.close()
 
     @filter.command("meme列表", alias={"表情帮助", "meme菜单", "meme帮助"})
     async def memes_help(self, event):
@@ -148,4 +151,3 @@ class MemePlugin(Star):
 
         if image:
             yield event.chain_result([Comp.Image.fromBytes(image)])  # type: ignore
-
