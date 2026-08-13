@@ -2,6 +2,6 @@ name: astrbot_plugin_memelite
 display_name: 表情包生成器
 desc: 表情包生成器，制作各种沙雕表情
 help: 略
-version: v3.0.4
+version: v3.0.5
 author: Zhalslar
 repo: https://github.com/Zhalslar/astrbot_plugin_memelite
