@@ -49,13 +49,24 @@ class ParamsCollector:
         target_id: str,
         images: list,
         options: dict,
+        name: str = "",
     ):
         """补齐昵称、性别、头像信息"""
+        nickname = name or target_id
         if result := await self.get_extra(event, target_id):
             nickname, sex = result
             options["name"], options["gender"] = nickname, sex
-            if avatar := await self.avatar_manager.get_avatar(target_id):
-                images.append((nickname, avatar))
+        avatar = None
+        if event.get_platform_name() in {"qq_official", "qq_official_webhook"}:
+            appid = str(getattr(getattr(event.bot, "platform", None), "appid", ""))  # type: ignore
+            avatar = await self.avatar_manager.get_qq_official_avatar(
+                appid,
+                target_id,
+            )
+        if not avatar:
+            avatar = await self.avatar_manager.get_qq_avatar(target_id)
+        if avatar:
+            images.append((nickname, avatar))
 
     async def collect_params(self, event: AstrMessageEvent, params):
         """收集参数，返回 (images, texts, options)"""
@@ -74,7 +85,13 @@ class ParamsCollector:
                     if image := await self._decode_image(src):
                         images.append((name, image))
             elif isinstance(seg, At) and seg != chain[0]:
-                await self._append_id_info(event, str(seg.qq), images, options)
+                await self._append_id_info(
+                    event,
+                    str(seg.qq),
+                    images,
+                    options,
+                    seg.name or name,
+                )
             elif isinstance(seg, Plain):
                 plains: list[str] = seg.text.strip().split(" ")
                 if len(plains) > 1:
@@ -95,10 +112,14 @@ class ParamsCollector:
                         #  解析@qq
                         elif text.startswith("@"):
                             target_id = text[1:]
-                            if target_id.isdigit():
-                                await self._append_id_info(
-                                    event, target_id, images, options
-                                )
+                            await self._append_id_info(
+                                event, target_id, images, options
+                            )
+                        elif text.startswith("<@") and text.endswith(">"):
+                            target_id = text[2:-1]
+                            await self._append_id_info(
+                                event, target_id, images, options
+                            )
                         elif text:
                             texts.append(text)
 
@@ -112,10 +133,12 @@ class ParamsCollector:
 
         # 确保图片数量在min_images到max_images之间(参数足够即可)
         if len(images) < params.min_images:
-            if sender_avatar := await self.avatar_manager.get_avatar(send_id):
-                images.insert(0, (sender_name, sender_avatar))
+            image_count = len(images)
+            await self._append_id_info(event, send_id, images, options, sender_name)
+            if len(images) > image_count:
+                images.insert(0, images.pop())
         if len(images) < params.min_images:
-            if bot_avatar := await self.avatar_manager.get_avatar(self_id):
+            if bot_avatar := await self.avatar_manager.get_qq_avatar(self_id):
                 images.insert(0, ("bot", bot_avatar))
         images = images[: params.max_images]
 
@@ -125,4 +148,3 @@ class ParamsCollector:
         texts = texts[: params.max_texts]
 
         return images, texts, options
-
